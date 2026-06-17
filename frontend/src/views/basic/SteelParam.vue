@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useBasicDataStore } from '@/stores/basicData'
 import { Message, Modal } from '@arco-design/web-vue'
 import {
@@ -10,12 +10,14 @@ import {
   IconRefresh,
   IconTag,
   IconList,
-  IconApps
+  IconApps,
+  IconLoading
 } from '@arco-design/web-vue/es/icon'
 
 const store = useBasicDataStore()
 
 const activeTab = ref('spec')
+const submitting = ref(false)
 
 const materialModalVisible = ref(false)
 const materialModalMode = ref('add')
@@ -120,19 +122,29 @@ function openEditMaterial(item) {
   materialModalVisible.value = true
 }
 
-function handleMaterialSubmit() {
+async function handleMaterialSubmit() {
   if (!materialForm.value.name.trim()) {
     Message.warning('请输入材质名称')
     return
   }
-  if (materialModalMode.value === 'add') {
-    store.addMaterial({ ...materialForm.value })
-    Message.success('添加成功')
-  } else {
-    store.updateMaterial(currentEditingMaterialId.value, { ...materialForm.value })
-    Message.success('修改成功')
+  submitting.value = true
+  try {
+    if (materialModalMode.value === 'add') {
+      const result = await store.addMaterial({ ...materialForm.value })
+      if (result) {
+        Message.success('添加成功')
+        materialModalVisible.value = false
+      }
+    } else {
+      const result = await store.updateMaterial(currentEditingMaterialId.value, { ...materialForm.value })
+      if (result) {
+        Message.success('修改成功')
+        materialModalVisible.value = false
+      }
+    }
+  } finally {
+    submitting.value = false
   }
-  materialModalVisible.value = false
 }
 
 function handleDeleteMaterial(item) {
@@ -140,9 +152,11 @@ function handleDeleteMaterial(item) {
     title: '确认删除',
     content: `确定删除材质「${item.name}」吗？删除后相关的规格和商品也会被移除。`,
     okButtonProps: { status: 'danger' },
-    onOk: () => {
-      store.deleteMaterial(item.id)
-      Message.success('删除成功')
+    onOk: async () => {
+      const success = await store.deleteMaterial(item.id)
+      if (success) {
+        Message.success('删除成功')
+      }
     }
   })
 }
@@ -176,7 +190,7 @@ function openEditSpec(item) {
   specModalVisible.value = true
 }
 
-function handleSpecSubmit() {
+async function handleSpecSubmit() {
   if (!specForm.value.diameter.trim()) {
     Message.warning('请输入直径')
     return
@@ -189,14 +203,24 @@ function handleSpecSubmit() {
     Message.warning('请输入有效的每米理论重量')
     return
   }
-  if (specModalMode.value === 'add') {
-    store.addSpec({ ...specForm.value })
-    Message.success('添加成功')
-  } else {
-    store.updateSpec(currentEditingSpecId.value, { ...specForm.value })
-    Message.success('修改成功')
+  submitting.value = true
+  try {
+    if (specModalMode.value === 'add') {
+      const result = await store.addSpec({ ...specForm.value })
+      if (result) {
+        Message.success('添加成功')
+        specModalVisible.value = false
+      }
+    } else {
+      const result = await store.updateSpec(currentEditingSpecId.value, { ...specForm.value })
+      if (result) {
+        Message.success('修改成功')
+        specModalVisible.value = false
+      }
+    }
+  } finally {
+    submitting.value = false
   }
-  specModalVisible.value = false
 }
 
 function handleDeleteSpec(item) {
@@ -204,9 +228,11 @@ function handleDeleteSpec(item) {
     title: '确认删除',
     content: `确定删除规格 φ${item.diameter}×${item.wallThickness} 吗？`,
     okButtonProps: { status: 'danger' },
-    onOk: () => {
-      store.deleteSpec(item.id)
-      Message.success('删除成功')
+    onOk: async () => {
+      const success = await store.deleteSpec(item.id)
+      if (success) {
+        Message.success('删除成功')
+      }
     }
   })
 }
@@ -244,7 +270,7 @@ function openEditProduct(item) {
   productModalVisible.value = true
 }
 
-function handleProductSubmit() {
+async function handleProductSubmit() {
   if (!productForm.value.productCode.trim()) {
     Message.warning('请输入商品编号')
     return
@@ -257,14 +283,24 @@ function handleProductSubmit() {
     Message.warning('请选择规格')
     return
   }
-  if (productModalMode.value === 'add') {
-    store.addProduct({ ...productForm.value })
-    Message.success('添加成功')
-  } else {
-    store.updateProduct(currentEditingProductId.value, { ...productForm.value })
-    Message.success('修改成功')
+  submitting.value = true
+  try {
+    if (productModalMode.value === 'add') {
+      const result = await store.addProduct({ ...productForm.value })
+      if (result) {
+        Message.success('添加成功')
+        productModalVisible.value = false
+      }
+    } else {
+      const result = await store.updateProduct(currentEditingProductId.value, { ...productForm.value })
+      if (result) {
+        Message.success('修改成功')
+        productModalVisible.value = false
+      }
+    }
+  } finally {
+    submitting.value = false
   }
-  productModalVisible.value = false
 }
 
 function handleDeleteProduct(item) {
@@ -272,9 +308,11 @@ function handleDeleteProduct(item) {
     title: '确认删除',
     content: `确定删除商品「${item.productName}」吗？`,
     okButtonProps: { status: 'danger' },
-    onOk: () => {
-      store.deleteProduct(item.id)
-      Message.success('删除成功')
+    onOk: async () => {
+      const success = await store.deleteProduct(item.id)
+      if (success) {
+        Message.success('删除成功')
+      }
     }
   })
 }
@@ -294,7 +332,7 @@ const specColumns = [
   { title: '长度(mm)', dataIndex: 'length', width: 110 },
   { title: '每米理论重量(kg/m)', dataIndex: 'weightPerMeter', width: 150 },
   { title: '创建时间', dataIndex: 'createTime', width: 120 },
-  { title: '操作', dataIndex: 'actions', width: 140 }
+  { title: '操作', dataIndex: 'actions', width: 160, fixed: 'right' }
 ]
 
 const productColumns = [
@@ -309,8 +347,20 @@ const productColumns = [
   { title: '理论总吨位(t)', dataIndex: 'totalWeight', width: 130 },
   { title: '单价(元/吨)', dataIndex: 'unitPrice', width: 120 },
   { title: '总金额(元)', dataIndex: 'totalAmount', width: 130 },
-  { title: '操作', dataIndex: 'actions', width: 140 }
+  { title: '操作', dataIndex: 'actions', width: 160, fixed: 'right' }
 ]
+
+async function loadData() {
+  try {
+    await store.fetchAllData()
+  } catch (e) {
+    console.error('加载基础资料数据失败', e)
+  }
+}
+
+onMounted(() => {
+  loadData()
+})
 </script>
 
 <template>
