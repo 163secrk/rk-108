@@ -83,9 +83,16 @@ export const useUserStore = defineStore('user', () => {
       const menuNames = flattenMenuNames(menus.value)
       accessedRoutes = filterAsyncRoutes(asyncRoutes, menuNames)
     }
+    const constantNames = ['Dashboard', 'System']
+    const extraRoutes = accessedRoutes.filter(
+      (r) => !constantNames.includes(r.name)
+    )
     const layoutRoute = constantRoutes.find((r) => r.path === '/')
     if (layoutRoute) {
-      layoutRoute.children = accessedRoutes
+      extraRoutes.forEach((route) => {
+        layoutRoute.children.push(route)
+      })
+      router.removeRoute('Layout')
       router.addRoute(layoutRoute)
     }
     routesAdded.value = true

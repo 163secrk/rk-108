@@ -19,21 +19,26 @@ const loginForm = reactive({
   password: ''
 })
 
-const rules = {
-  username: [{ required: true, message: '请输入账号' }],
-  password: [{ required: true, message: '请输入密码' }]
-}
+const formRef = ref(null)
 
-async function handleSubmit({ valid }) {
-  if (!valid) return
+async function handleSubmit() {
+  try {
+    const errors = await formRef.value?.validate()
+    if (errors) return
+  } catch {
+    return
+  }
   loading.value = true
   try {
     await userStore.login(loginForm)
+    await userStore.getUserInfo()
+    await userStore.getMenus()
+    userStore.generateRoutes()
     Message.success('登录成功')
-    const redirect = route.query.redirect ? decodeURIComponent(route.query.redirect) : '/'
+    const redirect = route.query.redirect ? decodeURIComponent(route.query.redirect) : '/dashboard'
     router.push(redirect)
   } catch (e) {
-    console.error(e)
+    console.error('登录失败:', e)
   } finally {
     loading.value = false
   }
@@ -67,12 +72,10 @@ async function handleSubmit({ valid }) {
       <a-form
         ref="formRef"
         :model="loginForm"
-        :rules="rules"
         layout="vertical"
         class="login-form"
-        @submit="handleSubmit"
       >
-        <a-form-item field="username" label="账号">
+        <a-form-item field="username" label="账号" :rules="[{ required: true, message: '请输入账号' }]">
           <a-input
             v-model="loginForm.username"
             placeholder="请输入账号"
@@ -85,7 +88,7 @@ async function handleSubmit({ valid }) {
           </a-input>
         </a-form-item>
 
-        <a-form-item field="password" label="密码">
+        <a-form-item field="password" label="密码" :rules="[{ required: true, message: '请输入密码' }]">
           <a-input-password
             v-model="loginForm.password"
             placeholder="请输入密码"
@@ -103,7 +106,7 @@ async function handleSubmit({ valid }) {
           long
           class="login-btn"
           :loading="loading"
-          html-type="submit"
+          @click="handleSubmit"
         >
           <template #icon>
             <icon-import />

@@ -254,20 +254,14 @@ onMounted(() => {
               </a-tag>
             </div>
             <template #content>
-              <a-dmenu>
-                <a-dmenu-item @click="handleProfile">
-                  <template #icon>
-                    <icon-edit />
-                  </template>
-                  个人设置
-                </a-dmenu-item>
-                <a-dmenu-item @click="handleLogout">
-                  <template #icon>
-                    <icon-poweroff />
-                  </template>
-                  退出登录
-                </a-dmenu-item>
-              </a-dmenu>
+              <a-doption @click="handleProfile">
+                <icon-edit />
+                个人设置
+              </a-doption>
+              <a-doption @click="handleLogout">
+                <icon-poweroff />
+                退出登录
+              </a-doption>
             </template>
           </a-dropdown>
         </div>

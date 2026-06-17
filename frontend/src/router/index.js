@@ -10,9 +10,23 @@ export const constantRoutes = [
   },
   {
     path: '/',
+    name: 'Layout',
     component: Layout,
     redirect: '/dashboard',
-    children: []
+    children: [
+      {
+        path: '/dashboard',
+        name: 'Dashboard',
+        component: () => import('@/views/Dashboard.vue'),
+        meta: { title: '数据看板', icon: 'icon-dashboard' }
+      },
+      {
+        path: '/system',
+        name: 'System',
+        component: () => import('@/views/System.vue'),
+        meta: { title: '系统设置', icon: 'icon-settings' }
+      }
+    ]
   }
 ]
 
