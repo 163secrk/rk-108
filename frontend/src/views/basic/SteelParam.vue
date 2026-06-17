@@ -332,22 +332,22 @@ const specColumns = [
   { title: '长度(mm)', dataIndex: 'length', width: 110 },
   { title: '每米理论重量(kg/m)', dataIndex: 'weightPerMeter', width: 150 },
   { title: '创建时间', dataIndex: 'createTime', width: 120 },
-  { title: '操作', dataIndex: 'actions', width: 160, fixed: 'right' }
+  { title: '操作', slotName: 'specActions', width: 140 }
 ]
 
 const productColumns = [
   { title: '商品编号', dataIndex: 'productCode', width: 140 },
   { title: '商品名称', dataIndex: 'productName', width: 240 },
   { title: '材质', dataIndex: 'materialName', width: 90 },
-  { title: '规格(直径×壁厚)', dataIndex: 'spec', width: 130 },
-  { title: '单支长度(m)', dataIndex: 'lengthM', width: 110 },
-  { title: '每米重量(kg)', dataIndex: 'weightPerMeter', width: 120 },
+  { title: '规格(直径×壁厚)', slotName: 'spec', width: 130 },
+  { title: '单支长度(m)', slotName: 'lengthM', width: 110 },
+  { title: '每米重量(kg)', slotName: 'weightPerMeter', width: 120 },
   { title: '支数', dataIndex: 'quantity', width: 90, editable: true },
   { title: '单位', dataIndex: 'unit', width: 70 },
-  { title: '理论总吨位(t)', dataIndex: 'totalWeight', width: 130 },
-  { title: '单价(元/吨)', dataIndex: 'unitPrice', width: 120 },
-  { title: '总金额(元)', dataIndex: 'totalAmount', width: 130 },
-  { title: '操作', dataIndex: 'actions', width: 160, fixed: 'right' }
+  { title: '理论总吨位(t)', slotName: 'totalWeight', width: 130 },
+  { title: '单价(元/吨)', slotName: 'unitPrice', width: 120 },
+  { title: '总金额(元)', slotName: 'totalAmount', width: 130 },
+  { title: '操作', slotName: 'productActions', width: 140 }
 ]
 
 async function loadData() {
@@ -493,28 +493,18 @@ onMounted(() => {
                 :pagination="{ pageSize: 8 }"
                 class="data-table"
               >
+                <template #specActions="{ record }">
+                  <a-space>
+                    <a-button type="text" size="small" @click="openEditSpec(record)">
+                      <template #icon><icon-edit /></template>
+                    </a-button>
+                    <a-button type="text" size="small" status="danger" @click="handleDeleteSpec(record)">
+                      <template #icon><icon-delete /></template>
+                    </a-button>
+                  </a-space>
+                </template>
                 <template #bodyCell="{ column, record }">
-                  <template v-if="column.dataIndex === 'actions'">
-                    <a-button type="outline" size="small" @click="openEditSpec(record)">
-                      <template #icon>
-                        <icon-edit />
-                      </template>
-                      编辑
-                    </a-button>
-                    <a-button
-                      type="outline"
-                      size="small"
-                      status="danger"
-                      style="margin-left: 8px"
-                      @click="handleDeleteSpec(record)"
-                    >
-                      <template #icon>
-                        <icon-delete />
-                      </template>
-                      删除
-                    </a-button>
-                  </template>
-                  <template v-else-if="column.dataIndex === 'weightPerMeter'">
+                  <template v-if="column.dataIndex === 'weightPerMeter'">
                     <span class="weight-value">{{ record.weightPerMeter.toFixed(2) }}</span>
                   </template>
                 </template>
@@ -562,49 +552,37 @@ onMounted(() => {
                 class="data-table product-table"
                 :scroll="{ x: 1400 }"
               >
-                <template #bodyCell="{ column, record }">
-                  <template v-if="column.dataIndex === 'spec'">
-                    φ{{ record.diameter }}×{{ record.wallThickness }}
-                  </template>
-                  <template v-else-if="column.dataIndex === 'lengthM'">
-                    {{ (parseFloat(record.length) / 1000).toFixed(2) }}
-                  </template>
-                  <template v-else-if="column.dataIndex === 'weightPerMeter'">
-                    {{ record.weightPerMeter.toFixed(3) }}
-                  </template>
-                  <template v-else-if="column.dataIndex === 'totalWeight'">
-                    <span class="weight-value highlight">
-                      {{ getTotalWeight(record).toFixed(4) }}
-                    </span>
-                  </template>
-                  <template v-else-if="column.dataIndex === 'totalAmount'">
-                    <span class="amount-value">
-                      {{ getTotalAmount(record).toFixed(2) }}
-                    </span>
-                  </template>
-                  <template v-else-if="column.dataIndex === 'unitPrice'">
-                    {{ record.unitPrice.toFixed(2) }}
-                  </template>
-                  <template v-else-if="column.dataIndex === 'actions'">
-                    <a-button type="outline" size="small" @click="openEditProduct(record)">
-                      <template #icon>
-                        <icon-edit />
-                      </template>
-                      编辑
+                <template #spec="{ record }">
+                  φ{{ record.diameter }}×{{ record.wallThickness }}
+                </template>
+                <template #lengthM="{ record }">
+                  {{ (parseFloat(record.length) / 1000).toFixed(2) }}
+                </template>
+                <template #weightPerMeter="{ record }">
+                  {{ record.weightPerMeter.toFixed(3) }}
+                </template>
+                <template #totalWeight="{ record }">
+                  <span class="weight-value highlight">
+                    {{ getTotalWeight(record).toFixed(4) }}
+                  </span>
+                </template>
+                <template #totalAmount="{ record }">
+                  <span class="amount-value">
+                    {{ getTotalAmount(record).toFixed(2) }}
+                  </span>
+                </template>
+                <template #unitPrice="{ record }">
+                  {{ record.unitPrice.toFixed(2) }}
+                </template>
+                <template #productActions="{ record }">
+                  <a-space>
+                    <a-button type="text" size="small" @click="openEditProduct(record)">
+                      <template #icon><icon-edit /></template>
                     </a-button>
-                    <a-button
-                      type="outline"
-                      size="small"
-                      status="danger"
-                      style="margin-left: 8px"
-                      @click="handleDeleteProduct(record)"
-                    >
-                      <template #icon>
-                        <icon-delete />
-                      </template>
-                      删除
+                    <a-button type="text" size="small" status="danger" @click="handleDeleteProduct(record)">
+                      <template #icon><icon-delete /></template>
                     </a-button>
-                  </template>
+                  </a-space>
                 </template>
               </a-table>
 
