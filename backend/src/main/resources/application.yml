@@ -5,7 +5,7 @@ spring:
   application:
     name: gangetong
   datasource:
-    url: jdbc:sqlite:./data/gangetong.db
+    url: jdbc:sqlite:./data/gangetong.db?journal_mode=WAL&encoding=UTF-8
     driver-class-name: org.sqlite.JDBC
     username: admin
     password: admin
@@ -13,6 +13,7 @@ spring:
     init:
       mode: always
       schema-locations: classpath:schema.sql
+      encoding: UTF-8
   jpa:
     hibernate:
       ddl-auto: none

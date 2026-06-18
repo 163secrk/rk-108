@@ -111,7 +111,7 @@ function filterTree(nodes, keyword) {
 }
 
 function handleSelect(keys) {
-  selectedKeys.value = keys
+  selectedKeys.value = keys.map(k => Number(k))
 }
 
 function getLevelIcon(level) {
@@ -308,10 +308,11 @@ onMounted(() => {
               :data="treeData"
               :selected-keys="selectedKeys"
               :expanded-keys="expandedKeys"
+              node-key="id"
               show-line
               block-node
               @select="handleSelect"
-              @expand="expandedKeys = $event"
+              @expand="(keys) => expandedKeys = keys.map(k => Number(k))"
             >
               <template #title="nodeData">
                 <div class="tree-node" @contextmenu.prevent>

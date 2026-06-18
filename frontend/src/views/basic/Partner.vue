@@ -18,6 +18,8 @@ const typeFilter = ref('ALL')
 const searchText = ref('')
 const submitting = ref(false)
 
+const formRef = ref(null)
+
 const modalVisible = ref(false)
 const modalMode = ref('add')
 const currentEditingId = ref(null)
@@ -33,6 +35,41 @@ const form = ref({
   remark: '',
   status: 1
 })
+
+const formRules = {
+  name: [
+    { required: true, message: '请输入单位名称' },
+    { maxLength: 100, message: '单位名称不能超过100个字符' }
+  ],
+  code: [
+    { required: true, message: '请输入单位编码' },
+    { maxLength: 50, message: '单位编码不能超过50个字符' }
+  ],
+  type: [
+    { required: true, message: '请选择单位类型' }
+  ],
+  phone: [
+    { match: /^[\d\-+\s()]*$/, message: '电话格式不正确' }
+  ],
+  creditLimit: [
+    { validator: (v, cb) => {
+      if (v !== null && v !== undefined && v < 0) {
+        cb('信用额度不能为负数')
+      } else {
+        cb()
+      }
+    }}
+  ],
+  paymentDays: [
+    { validator: (v, cb) => {
+      if (v !== null && v !== undefined && v < 0) {
+        cb('账期天数不能为负数')
+      } else {
+        cb()
+      }
+    }}
+  ]
+}
 
 const typeOptions = [
   { label: '全部', value: 'ALL' },
@@ -96,6 +133,7 @@ function openAdd() {
     status: 1
   }
   modalVisible.value = true
+  setTimeout(() => formRef.value?.clearValidate(), 0)
 }
 
 function openEdit(record) {
@@ -114,19 +152,17 @@ function openEdit(record) {
     status: record.status ?? 1
   }
   modalVisible.value = true
+  setTimeout(() => formRef.value?.clearValidate(), 0)
 }
 
 async function handleSubmit() {
-  if (!form.value.name) {
-    Message.warning('请输入单位名称')
-    return
-  }
-  if (!form.value.code) {
-    Message.warning('请输入单位编码')
-    return
-  }
   submitting.value = true
   try {
+    const valid = await formRef.value?.validate().catch(() => false)
+    if (valid === false) {
+      submitting.value = false
+      return
+    }
     if (modalMode.value === 'add') {
       const result = await store.addPartner(form.value)
       if (result) {
@@ -304,20 +340,20 @@ onMounted(() => {
       @cancel="modalVisible = false"
       width="620px"
     >
-      <a-form :model="form" layout="vertical">
+      <a-form ref="formRef" :model="form" :rules="formRules" layout="vertical">
         <a-row :gutter="16">
           <a-col :span="12">
-            <a-form-item label="单位名称" required>
+            <a-form-item field="name" label="单位名称" required>
               <a-input v-model="form.name" placeholder="请输入单位名称" />
             </a-form-item>
           </a-col>
           <a-col :span="12">
-            <a-form-item label="单位编码" required>
+            <a-form-item field="code" label="单位编码" required>
               <a-input v-model="form.code" placeholder="请输入单位编码" />
             </a-form-item>
           </a-col>
         </a-row>
-        <a-form-item label="单位类型" required>
+        <a-form-item field="type" label="单位类型" required>
           <a-radio-group v-model="form.type">
             <a-radio value="SUPPLIER">供应商</a-radio>
             <a-radio value="CUSTOMER">客户</a-radio>
@@ -325,19 +361,19 @@ onMounted(() => {
         </a-form-item>
         <a-row :gutter="16">
           <a-col :span="12">
-            <a-form-item label="联系人">
+            <a-form-item field="contactPerson" label="联系人">
               <a-input v-model="form.contactPerson" placeholder="请输入联系人" />
             </a-form-item>
           </a-col>
           <a-col :span="12">
-            <a-form-item label="电话">
+            <a-form-item field="phone" label="电话">
               <a-input v-model="form.phone" placeholder="请输入联系电话" />
             </a-form-item>
           </a-col>
         </a-row>
         <a-row :gutter="16">
           <a-col :span="12">
-            <a-form-item label="信用额度（元）">
+            <a-form-item field="creditLimit" label="信用额度（元）">
               <a-input-number
                 v-model="form.creditLimit"
                 :min="0"
@@ -349,7 +385,7 @@ onMounted(() => {
             </a-form-item>
           </a-col>
           <a-col :span="12">
-            <a-form-item label="账期天数">
+            <a-form-item field="paymentDays" label="账期天数">
               <a-input-number
                 v-model="form.paymentDays"
                 :min="0"
@@ -366,13 +402,13 @@ onMounted(() => {
             信用额度是销售订单的核心风控参数，当客户未结余额超过此额度时，系统将在销售下单时发出预警提示。
           </template>
         </a-alert>
-        <a-form-item label="地址">
+        <a-form-item field="address" label="地址">
           <a-input v-model="form.address" placeholder="请输入地址" />
         </a-form-item>
-        <a-form-item label="备注">
+        <a-form-item field="remark" label="备注">
           <a-textarea v-model="form.remark" placeholder="请输入备注信息" :max-length="200" show-word-limit />
         </a-form-item>
-        <a-form-item label="状态">
+        <a-form-item field="status" label="状态">
           <a-switch v-model="form.status" :checked-value="1" :unchecked-value="0">
             <template #checked>启用</template>
             <template #unchecked>停用</template>
