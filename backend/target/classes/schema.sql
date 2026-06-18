@@ -132,3 +132,54 @@ INSERT OR IGNORE INTO "partner" (id, name, code, type, contact_person, phone, cr
 (3, '中建三局', 'CUS-001', 'CUSTOMER', '王工', '13900001111', 300000.00, 30, '湖北省武汉市', '大客户', 1, '2024-02-01'),
 (4, '中铁建设', 'CUS-002', 'CUSTOMER', '赵经理', '13900002222', 500000.00, 60, '北京市海淀区', '基建项目客户', 1, '2024-02-05'),
 (5, '宝钢股份', 'SUP-003', 'SUPPLIER', '刘主任', '13800003333', 1000000.00, 30, '上海市宝山区', '高端钢材供应商', 1, '2024-02-10');
+
+-- ============================================
+-- 采购管理：采购合同主表
+-- ============================================
+CREATE TABLE IF NOT EXISTS "purchase_contract" (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    contract_no VARCHAR(50) NOT NULL UNIQUE,
+    supplier_id INTEGER NOT NULL,
+    sign_date VARCHAR(20) NOT NULL,
+    delivery_date VARCHAR(20),
+    status VARCHAR(20) NOT NULL DEFAULT 'DRAFT',
+    total_amount DECIMAL(14,2) NOT NULL DEFAULT 0,
+    total_weight DECIMAL(12,3) NOT NULL DEFAULT 0,
+    remark VARCHAR(500),
+    create_by INTEGER,
+    create_time VARCHAR(20) DEFAULT (datetime('now', 'localtime')),
+    update_time VARCHAR(20) DEFAULT (datetime('now', 'localtime'))
+);
+
+-- ============================================
+-- 采购管理：采购合同明细表
+-- ============================================
+CREATE TABLE IF NOT EXISTS "purchase_contract_item" (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    contract_id INTEGER NOT NULL,
+    product_id INTEGER NOT NULL,
+    material_id INTEGER NOT NULL,
+    spec_id INTEGER NOT NULL,
+    quantity INTEGER NOT NULL DEFAULT 0,
+    unit_price DECIMAL(12,2) NOT NULL DEFAULT 0,
+    amount DECIMAL(14,2) NOT NULL DEFAULT 0,
+    weight DECIMAL(12,3) NOT NULL DEFAULT 0,
+    in_stock_quantity INTEGER NOT NULL DEFAULT 0,
+    sort_no INTEGER DEFAULT 0,
+    create_time VARCHAR(20) DEFAULT (datetime('now', 'localtime'))
+);
+
+-- ============================================
+-- 库存管理：在途库存表
+-- ============================================
+CREATE TABLE IF NOT EXISTS "in_transit_stock" (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    product_id INTEGER NOT NULL,
+    material_id INTEGER NOT NULL,
+    spec_id INTEGER NOT NULL,
+    contract_id INTEGER NOT NULL,
+    contract_item_id INTEGER NOT NULL,
+    quantity INTEGER NOT NULL DEFAULT 0,
+    weight DECIMAL(12,3) NOT NULL DEFAULT 0,
+    create_time VARCHAR(20) DEFAULT (datetime('now', 'localtime'))
+);
