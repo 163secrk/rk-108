@@ -1,11 +1,15 @@
 com\gangetong\common\Result.class
 com\gangetong\config\SecurityConfig.class
+com\gangetong\service\impl\PartnerServiceImpl.class
 com\gangetong\dto\LoginVO.class
 com\gangetong\entity\SteelSpec.class
 com\gangetong\mapper\MaterialMapper.class
 com\gangetong\dto\LoginDTO.class
 com\gangetong\mapper\ProductMapper.class
+com\gangetong\service\WarehouseService.class
 com\gangetong\config\WebMvcConfig.class
+com\gangetong\entity\Partner.class
+com\gangetong\service\impl\WarehouseServiceImpl.class
 com\gangetong\service\impl\ProductServiceImpl.class
 com\gangetong\service\ProductService.class
 com\gangetong\service\PartnerService.class

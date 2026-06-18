@@ -1,11 +1,16 @@
 server:
   port: 8108
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
 
 spring:
   application:
     name: gangetong
   datasource:
-    url: jdbc:sqlite:./data/gangetong.db?journal_mode=WAL&encoding=UTF-8
+    url: jdbc:sqlite:./data/gangetong.db
     driver-class-name: org.sqlite.JDBC
     username: admin
     password: admin

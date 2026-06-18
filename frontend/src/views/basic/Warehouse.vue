@@ -114,6 +114,10 @@ function handleSelect(keys) {
   selectedKeys.value = keys.map(k => Number(k))
 }
 
+function handleExpand(keys) {
+  expandedKeys.value = keys.map(k => Number(k))
+}
+
 function getLevelIcon(level) {
   if (level === 1) return IconHome
   if (level === 2) return IconFolder
@@ -308,11 +312,11 @@ onMounted(() => {
               :data="treeData"
               :selected-keys="selectedKeys"
               :expanded-keys="expandedKeys"
-              node-key="id"
+              :field-names="{ key: 'id', title: 'name' }"
               show-line
               block-node
               @select="handleSelect"
-              @expand="(keys) => expandedKeys = keys.map(k => Number(k))"
+              @expand="handleExpand"
             >
               <template #title="nodeData">
                 <div class="tree-node" @contextmenu.prevent>
