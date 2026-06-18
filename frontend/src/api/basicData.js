@@ -112,3 +112,85 @@ export function deleteProduct(id) {
     method: 'delete'
   })
 }
+
+export function getWarehouseList() {
+  return request({
+    url: '/basic/warehouse/list',
+    method: 'get'
+  })
+}
+
+export function getWarehouseTree() {
+  return request({
+    url: '/basic/warehouse/tree',
+    method: 'get'
+  })
+}
+
+export function getWarehouseById(id) {
+  return request({
+    url: `/basic/warehouse/${id}`,
+    method: 'get'
+  })
+}
+
+export function addWarehouse(data) {
+  return request({
+    url: '/basic/warehouse',
+    method: 'post',
+    data
+  })
+}
+
+export function updateWarehouse(data) {
+  return request({
+    url: '/basic/warehouse',
+    method: 'put',
+    data
+  })
+}
+
+export function deleteWarehouse(id) {
+  return request({
+    url: `/basic/warehouse/${id}`,
+    method: 'delete'
+  })
+}
+
+export function getPartnerList(params) {
+  return request({
+    url: '/basic/partner/list',
+    method: 'get',
+    params
+  })
+}
+
+export function getPartnerById(id) {
+  return request({
+    url: `/basic/partner/${id}`,
+    method: 'get'
+  })
+}
+
+export function addPartner(data) {
+  return request({
+    url: '/basic/partner',
+    method: 'post',
+    data
+  })
+}
+
+export function updatePartner(data) {
+  return request({
+    url: '/basic/partner',
+    method: 'put',
+    data
+  })
+}
+
+export function deletePartner(id) {
+  return request({
+    url: `/basic/partner/${id}`,
+    method: 'delete'
+  })
+}

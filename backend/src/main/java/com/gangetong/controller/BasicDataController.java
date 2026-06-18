@@ -2,11 +2,15 @@ package com.gangetong.controller;
 
 import com.gangetong.common.Result;
 import com.gangetong.entity.Material;
+import com.gangetong.entity.Partner;
 import com.gangetong.entity.Product;
 import com.gangetong.entity.SteelSpec;
+import com.gangetong.entity.Warehouse;
 import com.gangetong.service.MaterialService;
+import com.gangetong.service.PartnerService;
 import com.gangetong.service.ProductService;
 import com.gangetong.service.SteelSpecService;
+import com.gangetong.service.WarehouseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +29,12 @@ public class BasicDataController {
 
     @Autowired
     private ProductService productService;
+
+    @Autowired
+    private WarehouseService warehouseService;
+
+    @Autowired
+    private PartnerService partnerService;
 
     // ========================================
     // 材质 Material 接口
@@ -207,6 +217,131 @@ public class BasicDataController {
     @DeleteMapping("/product/{id}")
     public Result<Void> deleteProduct(@PathVariable Long id) {
         boolean success = productService.delete(id);
+        if (success) {
+            return Result.success("删除成功", null);
+        }
+        return Result.error("删除失败");
+    }
+
+    // ========================================
+    // 仓库 Warehouse 接口
+    // ========================================
+
+    @GetMapping("/warehouse/list")
+    public Result<List<Warehouse>> listWarehouses() {
+        List<Warehouse> list = warehouseService.listAll();
+        return Result.success(list);
+    }
+
+    @GetMapping("/warehouse/tree")
+    public Result<List<Warehouse>> warehouseTree() {
+        List<Warehouse> tree = warehouseService.treeList();
+        return Result.success(tree);
+    }
+
+    @GetMapping("/warehouse/{id}")
+    public Result<Warehouse> getWarehouse(@PathVariable Long id) {
+        Warehouse warehouse = warehouseService.getById(id);
+        if (warehouse == null) {
+            return Result.error("仓库不存在");
+        }
+        return Result.success(warehouse);
+    }
+
+    @PostMapping("/warehouse")
+    public Result<Warehouse> addWarehouse(@RequestBody Warehouse warehouse) {
+        if (warehouse.getName() == null || warehouse.getName().trim().isEmpty()) {
+            return Result.error("仓库名称不能为空");
+        }
+        if (warehouse.getCode() == null || warehouse.getCode().trim().isEmpty()) {
+            return Result.error("仓库编码不能为空");
+        }
+        boolean success = warehouseService.add(warehouse);
+        if (success) {
+            return Result.success("添加成功", warehouseService.getById(warehouse.getId()));
+        }
+        return Result.error("添加失败");
+    }
+
+    @PutMapping("/warehouse")
+    public Result<Warehouse> updateWarehouse(@RequestBody Warehouse warehouse) {
+        if (warehouse.getId() == null) {
+            return Result.error("ID不能为空");
+        }
+        boolean success = warehouseService.update(warehouse);
+        if (success) {
+            return Result.success("修改成功", warehouseService.getById(warehouse.getId()));
+        }
+        return Result.error("修改失败");
+    }
+
+    @DeleteMapping("/warehouse/{id}")
+    @Transactional
+    public Result<Void> deleteWarehouse(@PathVariable Long id) {
+        boolean success = warehouseService.delete(id);
+        if (success) {
+            return Result.success("删除成功", null);
+        }
+        return Result.error("删除失败");
+    }
+
+    // ========================================
+    // 往来单位 Partner 接口
+    // ========================================
+
+    @GetMapping("/partner/list")
+    public Result<List<Partner>> listPartners(@RequestParam(required = false) String type) {
+        List<Partner> list;
+        if (type != null && !type.isEmpty()) {
+            list = partnerService.listByType(type);
+        } else {
+            list = partnerService.listAll();
+        }
+        return Result.success(list);
+    }
+
+    @GetMapping("/partner/{id}")
+    public Result<Partner> getPartner(@PathVariable Long id) {
+        Partner partner = partnerService.getById(id);
+        if (partner == null) {
+            return Result.error("往来单位不存在");
+        }
+        return Result.success(partner);
+    }
+
+    @PostMapping("/partner")
+    public Result<Partner> addPartner(@RequestBody Partner partner) {
+        if (partner.getName() == null || partner.getName().trim().isEmpty()) {
+            return Result.error("单位名称不能为空");
+        }
+        if (partner.getCode() == null || partner.getCode().trim().isEmpty()) {
+            return Result.error("单位编码不能为空");
+        }
+        if (partner.getType() == null || partner.getType().trim().isEmpty()) {
+            return Result.error("单位类型不能为空");
+        }
+        boolean success = partnerService.add(partner);
+        if (success) {
+            return Result.success("添加成功", partnerService.getById(partner.getId()));
+        }
+        return Result.error("添加失败");
+    }
+
+    @PutMapping("/partner")
+    public Result<Partner> updatePartner(@RequestBody Partner partner) {
+        if (partner.getId() == null) {
+            return Result.error("ID不能为空");
+        }
+        boolean success = partnerService.update(partner);
+        if (success) {
+            return Result.success("修改成功", partnerService.getById(partner.getId()));
+        }
+        return Result.error("修改失败");
+    }
+
+    @DeleteMapping("/partner/{id}")
+    public Result<Void> deletePartner(@PathVariable Long id) {
+        boolean success = partnerService.delete(id);
         if (success) {
             return Result.success("删除成功", null);
         }

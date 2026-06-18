@@ -1,10 +1,14 @@
+D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\mapper\PartnerMapper.java
 D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\service\SteelSpecService.java
 D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\entity\User.java
+D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\entity\Partner.java
 D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\config\WebMvcConfig.java
 D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\service\impl\ProductServiceImpl.java
 D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\service\MaterialService.java
 D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\controller\BasicDataController.java
+D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\service\PartnerService.java
 D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\service\impl\MaterialServiceImpl.java
+D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\service\impl\PartnerServiceImpl.java
 D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\config\JwtAuthInterceptor.java
 D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\entity\Material.java
 D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\mapper\SteelSpecMapper.java
@@ -12,6 +16,8 @@ D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\entity\St
 D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\mapper\UserMapper.java
 D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\dto\LoginDTO.java
 D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\util\JwtUtil.java
+D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\service\impl\WarehouseServiceImpl.java
+D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\mapper\WarehouseMapper.java
 D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\config\SecurityConfig.java
 D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\entity\Product.java
 D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\GangetongApplication.java
@@ -19,9 +25,11 @@ D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\entity\Me
 D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\controller\AuthController.java
 D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\mapper\MaterialMapper.java
 D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\service\impl\UserServiceImpl.java
+D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\entity\Warehouse.java
 D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\mapper\ProductMapper.java
 D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\common\Result.java
 D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\dto\LoginVO.java
 D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\service\ProductService.java
 D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\service\UserService.java
 D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\service\impl\SteelSpecServiceImpl.java
+D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\service\WarehouseService.java

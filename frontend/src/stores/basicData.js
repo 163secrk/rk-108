@@ -12,7 +12,16 @@ import {
   getProductList,
   addProduct as apiAddProduct,
   updateProduct as apiUpdateProduct,
-  deleteProduct as apiDeleteProduct
+  deleteProduct as apiDeleteProduct,
+  getWarehouseList,
+  getWarehouseTree,
+  addWarehouse as apiAddWarehouse,
+  updateWarehouse as apiUpdateWarehouse,
+  deleteWarehouse as apiDeleteWarehouse,
+  getPartnerList,
+  addPartner as apiAddPartner,
+  updatePartner as apiUpdatePartner,
+  deletePartner as apiDeletePartner
 } from '@/api/basicData'
 
 export const useBasicDataStore = defineStore('basicData', () => {
@@ -211,6 +220,104 @@ export const useBasicDataStore = defineStore('basicData', () => {
     return Math.round(totalWeight * unitPrice * 100) / 100
   }
 
+  const warehouses = ref([])
+  const warehouseTree = ref([])
+  const partners = ref([])
+
+  async function fetchWarehouses() {
+    try {
+      const res = await getWarehouseList()
+      warehouses.value = res.data || []
+      return warehouses.value
+    } catch (e) {
+      console.error('获取仓库列表失败', e)
+      throw e
+    }
+  }
+
+  async function fetchWarehouseTree() {
+    try {
+      const res = await getWarehouseTree()
+      warehouseTree.value = res.data || []
+      return warehouseTree.value
+    } catch (e) {
+      console.error('获取仓库树失败', e)
+      throw e
+    }
+  }
+
+  async function addWarehouse(data) {
+    const res = await apiAddWarehouse(data)
+    if (res.code === 200 && res.data) {
+      await fetchWarehouseTree()
+      await fetchWarehouses()
+      return res.data
+    }
+    return null
+  }
+
+  async function updateWarehouse(id, data) {
+    const res = await apiUpdateWarehouse({ id, ...data })
+    if (res.code === 200 && res.data) {
+      await fetchWarehouseTree()
+      await fetchWarehouses()
+      return res.data
+    }
+    return null
+  }
+
+  async function deleteWarehouse(id) {
+    const res = await apiDeleteWarehouse(id)
+    if (res.code === 200) {
+      await fetchWarehouseTree()
+      await fetchWarehouses()
+      return true
+    }
+    return false
+  }
+
+  async function fetchPartners(type = null) {
+    try {
+      const res = await getPartnerList(type ? { type } : {})
+      partners.value = res.data || []
+      return partners.value
+    } catch (e) {
+      console.error('获取往来单位列表失败', e)
+      throw e
+    }
+  }
+
+  async function addPartner(data) {
+    const res = await apiAddPartner(data)
+    if (res.code === 200 && res.data) {
+      await fetchPartners()
+      return res.data
+    }
+    return null
+  }
+
+  async function updatePartner(id, data) {
+    const res = await apiUpdatePartner({ id, ...data })
+    if (res.code === 200 && res.data) {
+      await fetchPartners()
+      return res.data
+    }
+    return null
+  }
+
+  async function deletePartner(id) {
+    const res = await apiDeletePartner(id)
+    if (res.code === 200) {
+      await fetchPartners()
+      return true
+    }
+    return false
+  }
+
+  function getPartnerById(id) {
+    return partners.value.find(p => p.id === id)
+  }
+
   return {
     materials,
     specs,
@@ -239,6 +346,19 @@ export const useBasicDataStore = defineStore('basicData', () => {
     updateProduct,
     deleteProduct,
     calculateTotalWeight,
-    calculateTotalAmount
+    calculateTotalAmount,
+    warehouses,
+    warehouseTree,
+    partners,
+    fetchWarehouses,
+    fetchWarehouseTree,
+    addWarehouse,
+    updateWarehouse,
+    deleteWarehouse,
+    fetchPartners,
+    addPartner,
+    updatePartner,
+    deletePartner,
+    getPartnerById
   }
 })

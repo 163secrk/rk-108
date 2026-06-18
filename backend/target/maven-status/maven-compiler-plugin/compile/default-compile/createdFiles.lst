@@ -8,11 +8,14 @@ com\gangetong\mapper\ProductMapper.class
 com\gangetong\config\WebMvcConfig.class
 com\gangetong\service\impl\ProductServiceImpl.class
 com\gangetong\service\ProductService.class
+com\gangetong\service\PartnerService.class
 com\gangetong\service\SteelSpecService.class
+com\gangetong\mapper\PartnerMapper.class
 com\gangetong\GangetongApplication.class
 com\gangetong\service\impl\SteelSpecServiceImpl.class
 com\gangetong\util\JwtUtil.class
 com\gangetong\service\MaterialService.class
+com\gangetong\mapper\WarehouseMapper.class
 com\gangetong\mapper\UserMapper.class
 com\gangetong\entity\Material.class
 com\gangetong\entity\Menu.class
@@ -20,6 +23,7 @@ com\gangetong\config\JwtAuthInterceptor.class
 com\gangetong\entity\User.class
 com\gangetong\service\impl\MaterialServiceImpl.class
 com\gangetong\service\impl\UserServiceImpl.class
+com\gangetong\entity\Warehouse.class
 com\gangetong\controller\AuthController.class
 com\gangetong\controller\BasicDataController.class
 com\gangetong\entity\Product.class

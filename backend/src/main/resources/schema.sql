@@ -79,3 +79,56 @@ INSERT OR IGNORE INTO "product" (id, product_code, product_name, material_id, sp
 (3, 'P202403003', '无缝钢管 Q355D φ108×5.0', 2, 4, 50, '支', 5200.00, '2024-03-05'),
 (4, 'P202403004', '无缝钢管 Q355B φ219×8.0', 3, 7, 30, '支', 4800.00, '2024-03-10'),
 (5, 'P202403005', '无缝钢管 20# φ48×3.5', 4, 9, 200, '支', 5500.00, '2024-03-12');
+
+-- ============================================
+-- 基础资料：仓库及库位表（支持多级：仓库→分区→货位）
+-- ============================================
+CREATE TABLE IF NOT EXISTS "warehouse" (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name VARCHAR(100) NOT NULL,
+    code VARCHAR(50) NOT NULL UNIQUE,
+    parent_id INTEGER DEFAULT 0,
+    level INTEGER NOT NULL DEFAULT 1,
+    address VARCHAR(300),
+    remark VARCHAR(500),
+    status INTEGER NOT NULL DEFAULT 1,
+    sort_no INTEGER DEFAULT 0,
+    create_time VARCHAR(20) DEFAULT (datetime('now', 'localtime'))
+);
+
+INSERT OR IGNORE INTO "warehouse" (id, name, code, parent_id, level, address, remark, status, sort_no, create_time) VALUES
+(1, 'A仓', 'WH-A', 0, 1, '厂区东侧', '主力仓库', 1, 1, '2024-01-15'),
+(2, 'B仓', 'WH-B', 0, 1, '厂区西侧', '备用仓库', 1, 2, '2024-01-16'),
+(3, 'A区', 'WH-A-ZA', 1, 2, NULL, 'A仓A区', 1, 1, '2024-01-15'),
+(4, 'B区', 'WH-A-ZB', 1, 2, NULL, 'A仓B区', 1, 2, '2024-01-15'),
+(5, 'A区', 'WH-B-ZA', 2, 2, NULL, 'B仓A区', 1, 1, '2024-01-16'),
+(6, 'A-01号位', 'WH-A-ZA-01', 3, 3, NULL, NULL, 1, 1, '2024-01-15'),
+(7, 'A-02号位', 'WH-A-ZA-02', 3, 3, NULL, NULL, 1, 2, '2024-01-15'),
+(8, 'B-01号位', 'WH-A-ZB-01', 4, 3, NULL, NULL, 1, 1, '2024-01-15'),
+(9, 'B-02号位', 'WH-A-ZB-02', 4, 3, NULL, NULL, 1, 2, '2024-01-15'),
+(10, 'A-01号位', 'WH-B-ZA-01', 5, 3, NULL, NULL, 1, 1, '2024-01-16');
+
+-- ============================================
+-- 基础资料：往来单位表（供应商/客户统一管理）
+-- ============================================
+CREATE TABLE IF NOT EXISTS "partner" (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name VARCHAR(100) NOT NULL,
+    code VARCHAR(50) NOT NULL UNIQUE,
+    type VARCHAR(20) NOT NULL,
+    contact_person VARCHAR(50),
+    phone VARCHAR(30),
+    credit_limit DECIMAL(14,2) NOT NULL DEFAULT 0,
+    payment_days INTEGER NOT NULL DEFAULT 0,
+    address VARCHAR(300),
+    remark VARCHAR(500),
+    status INTEGER NOT NULL DEFAULT 1,
+    create_time VARCHAR(20) DEFAULT (datetime('now', 'localtime'))
+);
+
+INSERT OR IGNORE INTO "partner" (id, name, code, type, contact_person, phone, credit_limit, payment_days, address, remark, status, create_time) VALUES
+(1, '河北钢铁集团', 'SUP-001', 'SUPPLIER', '张经理', '13800001111', 500000.00, 30, '河北省石家庄市', '核心供应商', 1, '2024-01-10'),
+(2, '首钢集团', 'SUP-002', 'SUPPLIER', '李总', '13800002222', 800000.00, 45, '北京市石景山区', '长期合作供应商', 1, '2024-01-12'),
+(3, '中建三局', 'CUS-001', 'CUSTOMER', '王工', '13900001111', 300000.00, 30, '湖北省武汉市', '大客户', 1, '2024-02-01'),
+(4, '中铁建设', 'CUS-002', 'CUSTOMER', '赵经理', '13900002222', 500000.00, 60, '北京市海淀区', '基建项目客户', 1, '2024-02-05'),
+(5, '宝钢股份', 'SUP-003', 'SUPPLIER', '刘主任', '13800003333', 1000000.00, 30, '上海市宝山区', '高端钢材供应商', 1, '2024-02-10');
