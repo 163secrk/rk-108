@@ -19,6 +19,8 @@ public interface StockService extends IService<Stock> {
     boolean increaseStock(Long productId, Long materialId, Long specId, Long warehouseId,
                           String furnaceNo, Integer quantity, BigDecimal weight, BigDecimal costUnitPrice);
 
+    boolean decreaseStock(Long stockId, Integer quantity, BigDecimal weight);
+
     List<StockSummaryVO> queryStockTree(StockQueryDTO dto);
 
     List<Stock> listAvailableForSale(Long productId, Long warehouseId, Long materialId, Long specId);

@@ -58,6 +58,42 @@ public class StockServiceImpl extends ServiceImpl<StockMapper, Stock> implements
     }
 
     @Override
+    @Transactional
+    public boolean decreaseStock(Long stockId, Integer quantity, BigDecimal weight) {
+        Stock stock = this.getById(stockId);
+        if (stock == null) {
+            throw new RuntimeException("库存记录不存在");
+        }
+        int currentQty = stock.getQuantity() != null ? stock.getQuantity() : 0;
+        int outQty = quantity != null ? quantity : 0;
+        if (outQty > currentQty) {
+            throw new RuntimeException("库存不足，当前库存：" + currentQty + "，需要出库：" + outQty);
+        }
+
+        BigDecimal currentWeight = stock.getWeight() != null ? stock.getWeight() : BigDecimal.ZERO;
+        BigDecimal outWeight = weight != null ? weight : BigDecimal.ZERO;
+        if (outWeight.compareTo(currentWeight) > 0) {
+            throw new RuntimeException("库存重量不足");
+        }
+
+        int newQty = currentQty - outQty;
+        BigDecimal newWeight = currentWeight.subtract(outWeight);
+        BigDecimal newCostAmount = BigDecimal.ZERO;
+        BigDecimal newUnitPrice = stock.getCostUnitPrice() != null ? stock.getCostUnitPrice() : BigDecimal.ZERO;
+        if (newQty > 0) {
+            BigDecimal oldAmount = stock.getCostAmount() != null ? stock.getCostAmount() : BigDecimal.ZERO;
+            BigDecimal outAmount = newUnitPrice.multiply(BigDecimal.valueOf(outQty));
+            newCostAmount = oldAmount.subtract(outAmount);
+        }
+
+        stock.setQuantity(newQty);
+        stock.setWeight(newWeight);
+        stock.setCostAmount(newCostAmount);
+        stock.setUpdateTime(now());
+        return this.updateById(stock);
+    }
+
+    @Override
     public List<Stock> listAll() {
         List<Stock> list = this.list(new LambdaQueryWrapper<Stock>().orderByDesc(Stock::getUpdateTime));
         fillRelatedData(list);
