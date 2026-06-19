@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { ref, reactive, computed, onMounted, watch, nextTick } from 'vue'
 import {
   Message,
   Modal
@@ -27,14 +27,14 @@ import {
 } from '@/api/purchase'
 import {
   getPartnerList,
-  getProductList,
-  getProductById
+  getProductList
 } from '@/api/basicData'
 import { useUserStore } from '@/stores/user'
 
 const userStore = useUserStore()
 
 const loading = ref(false)
+const submitting = ref(false)
 const searchForm = reactive({
   status: '',
   contractNo: '',
@@ -61,6 +61,7 @@ const statusTagMap = {
 const modalVisible = ref(false)
 const modalTitle = ref('新建采购合同')
 const editMode = ref(false)
+const formRef = ref(null)
 
 const contractForm = reactive({
   id: undefined,
@@ -97,7 +98,7 @@ async function loadData() {
       status: searchForm.status
     }
     const res = await getContractList(params)
-    if (res.success) {
+    if (res.code === 200) {
       let data = res.data
       if (searchForm.contractNo) {
         data = data.filter(item => item.contractNo.includes(searchForm.contractNo))
@@ -116,7 +117,7 @@ async function loadData() {
 async function loadSuppliers() {
   try {
     const res = await getPartnerList({ type: 'SUPPLIER' })
-    if (res.success) {
+    if (res.code === 200) {
       supplierOptions.value = res.data.map(item => ({
         label: item.name,
         value: item.id
@@ -124,13 +125,14 @@ async function loadSuppliers() {
     }
   } catch (e) {
     console.error('加载供应商失败', e)
+    Message.error('加载供应商数据失败')
   }
 }
 
 async function loadProducts() {
   try {
     const res = await getProductList()
-    if (res.success) {
+    if (res.code === 200) {
       productOptions.value = res.data.map(item => ({
         label: `${item.productCode} - ${item.productName}`,
         value: item.id,
@@ -139,6 +141,7 @@ async function loadProducts() {
     }
   } catch (e) {
     console.error('加载商品失败', e)
+    Message.error('加载商品数据失败')
   }
 }
 
@@ -176,7 +179,7 @@ async function handleAdd() {
   resetContractForm()
   try {
     const res = await generateContractNo()
-    if (res.success) {
+    if (res.code === 200) {
       contractForm.contractNo = res.data
     }
   } catch (e) {
@@ -185,6 +188,9 @@ async function handleAdd() {
   contractForm.createBy = userStore.userInfo?.id
   addEmptyItem()
   modalVisible.value = true
+  nextTick(() => {
+    formRef.value?.clearValidate()
+  })
 }
 
 async function handleEdit(record) {
@@ -192,7 +198,7 @@ async function handleEdit(record) {
   modalTitle.value = '编辑采购合同'
   try {
     const res = await getContractDetail(record.id)
-    if (res.success) {
+    if (res.code === 200) {
       const contract = res.data
       contractForm.id = contract.id
       contractForm.contractNo = contract.contractNo
@@ -200,17 +206,24 @@ async function handleEdit(record) {
       contractForm.signDate = contract.signDate
       contractForm.deliveryDate = contract.deliveryDate || ''
       contractForm.status = contract.status
-      contractForm.totalAmount = contract.totalAmount
-      contractForm.totalWeight = contract.totalWeight
+      contractForm.totalAmount = Number(contract.totalAmount) || 0
+      contractForm.totalWeight = Number(contract.totalWeight) || 0
       contractForm.remark = contract.remark || ''
       contractForm.createBy = contract.createBy
       contractForm.items = (contract.items || []).map(item => ({
         ...item,
-        weightPerMeter: item.weightPerMeter,
-        length: item.length
+        quantity: Number(item.quantity) || 0,
+        unitPrice: Number(item.unitPrice) || 0,
+        amount: Number(item.amount) || 0,
+        weight: Number(item.weight) || 0,
+        weightPerMeter: Number(item.weightPerMeter) || 0,
+        length: item.length || ''
       }))
       contractForm.deletedItemIds = []
       modalVisible.value = true
+      nextTick(() => {
+        formRef.value?.clearValidate()
+      })
     }
   } catch (e) {
     console.error('加载合同详情失败', e)
@@ -230,7 +243,7 @@ async function handleDelete(record) {
     onOk: async () => {
       try {
         const res = await deleteContract(record.id)
-        if (res.success) {
+        if (res.code === 200) {
           Message.success('删除成功')
           await loadData()
         } else {
@@ -252,7 +265,7 @@ async function handleAudit(record) {
     onOk: async () => {
       try {
         const res = await auditContract(record.id)
-        if (res.success) {
+        if (res.code === 200) {
           Message.success('审核成功')
           await loadData()
         } else {
@@ -274,7 +287,7 @@ async function handleComplete(record) {
     onOk: async () => {
       try {
         const res = await completeContract(record.id)
-        if (res.success) {
+        if (res.code === 200) {
           Message.success('完成成功')
           await loadData()
         } else {
@@ -375,7 +388,7 @@ function handleProductChange(item, productId) {
     item.diameter = product.diameter
     item.wallThickness = product.wallThickness
     item.length = product.length
-    item.weightPerMeter = product.weightPerMeter
+    item.weightPerMeter = Number(product.weightPerMeter) || 0
     calculateRow(item)
   }
 }
@@ -419,38 +432,49 @@ function handlePriceChange(item) {
 }
 
 async function handleSubmit() {
-  if (!contractForm.supplierId) {
-    Message.error('请选择供应商')
-    return
-  }
-  if (!contractForm.signDate) {
-    Message.error('请选择签订日期')
-    return
-  }
-
-  const validItems = contractForm.items.filter(item => item.productId)
-  if (validItems.length === 0) {
-    Message.error('请至少添加一条明细')
-    return
-  }
-
-  const hasInvalidItem = validItems.some(item => {
-    const qty = Number(item.quantity) || 0
-    const price = Number(item.unitPrice) || 0
-    return qty <= 0 || price <= 0
-  })
-
-  if (hasInvalidItem) {
-    Message.error('请填写有效的数量和单价')
-    return
-  }
-
-  const submitData = {
-    ...contractForm,
-    items: contractForm.items.filter(item => item.productId)
-  }
-
+  submitting.value = true
   try {
+    const valid = await formRef.value?.validate().catch(() => false)
+    if (valid === false) {
+      submitting.value = false
+      return
+    }
+
+    if (!contractForm.supplierId) {
+      Message.error('请选择供应商')
+      submitting.value = false
+      return
+    }
+    if (!contractForm.signDate) {
+      Message.error('请选择签订日期')
+      submitting.value = false
+      return
+    }
+
+    const validItems = contractForm.items.filter(item => item.productId)
+    if (validItems.length === 0) {
+      Message.error('请至少添加一条明细')
+      submitting.value = false
+      return
+    }
+
+    const hasInvalidItem = validItems.some(item => {
+      const qty = Number(item.quantity) || 0
+      const price = Number(item.unitPrice) || 0
+      return qty <= 0 || price <= 0
+    })
+
+    if (hasInvalidItem) {
+      Message.error('请填写有效的数量和单价')
+      submitting.value = false
+      return
+    }
+
+    const submitData = {
+      ...contractForm,
+      items: contractForm.items.filter(item => item.productId)
+    }
+
     let res
     if (editMode.value) {
       res = await updateContract(submitData)
@@ -458,7 +482,7 @@ async function handleSubmit() {
       res = await addContract(submitData)
     }
 
-    if (res.success) {
+    if (res.code === 200) {
       Message.success(editMode.value ? '修改成功' : '创建成功')
       modalVisible.value = false
       await loadData()
@@ -468,6 +492,8 @@ async function handleSubmit() {
   } catch (e) {
     console.error('提交失败', e)
     Message.error('提交失败')
+  } finally {
+    submitting.value = false
   }
 }
 
@@ -664,6 +690,7 @@ onMounted(() => {
       :title="modalTitle"
       :mask-closable="false"
       width="1200px"
+      :ok-loading="submitting"
       @ok="handleSubmit"
       @cancel="handleCancel"
       :ok-text="editMode ? '保存修改' : '创建合同'"
@@ -671,22 +698,21 @@ onMounted(() => {
     >
       <div class="contract-modal">
         <a-form
+          ref="formRef"
           :model="contractForm"
           :rules="formRules"
-          layout="horizontal"
-          :label-col-props="{ style: { width: '100px' } }"
-          :wrapper-col-props="{ style: { flex: 1 } }"
+          layout="vertical"
         >
           <div class="form-section">
             <h3 class="section-title">合同基本信息</h3>
-            <a-row :gutter="24">
+            <a-row :gutter="16">
               <a-col :span="12">
                 <a-form-item label="合同编号" field="contractNo">
                   <a-input v-model="contractForm.contractNo" readonly />
                 </a-form-item>
               </a-col>
               <a-col :span="12">
-                <a-form-item label="供应商" field="supplierId">
+                <a-form-item label="供应商" field="supplierId" required>
                   <a-select
                     v-model="contractForm.supplierId"
                     placeholder="请选择供应商"
@@ -695,8 +721,10 @@ onMounted(() => {
                   />
                 </a-form-item>
               </a-col>
+            </a-row>
+            <a-row :gutter="16">
               <a-col :span="12">
-                <a-form-item label="签订日期" field="signDate">
+                <a-form-item label="签订日期" field="signDate" required>
                   <a-date-picker
                     v-model="contractForm.signDate"
                     placeholder="请选择签订日期"
@@ -719,17 +747,15 @@ onMounted(() => {
                   />
                 </a-form-item>
               </a-col>
-              <a-col :span="24">
-                <a-form-item label="备注">
-                  <a-textarea
-                    v-model="contractForm.remark"
-                    placeholder="请输入备注"
-                    :rows="2"
-                    :disabled="contractForm.status !== 'DRAFT'"
-                  />
-                </a-form-item>
-              </a-col>
             </a-row>
+            <a-form-item label="备注">
+              <a-textarea
+                v-model="contractForm.remark"
+                placeholder="请输入备注"
+                :rows="2"
+                :disabled="contractForm.status !== 'DRAFT'"
+              />
+            </a-form-item>
           </div>
 
           <div class="form-section">
