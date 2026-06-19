@@ -16,6 +16,8 @@ public interface StockService extends IService<Stock> {
 
     List<Stock> listByWarehouseId(Long warehouseId);
 
+    List<Stock> listByWarehouseIdWithChildren(Long warehouseId);
+
     boolean increaseStock(Long productId, Long materialId, Long specId, Long warehouseId,
                           String furnaceNo, Integer quantity, BigDecimal weight, BigDecimal costUnitPrice);
 

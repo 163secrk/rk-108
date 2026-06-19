@@ -92,4 +92,21 @@ public class WarehouseServiceImpl extends ServiceImpl<WarehouseMapper, Warehouse
         }
         return this.removeById(id);
     }
+
+    @Override
+    public List<Long> listAllChildIds(Long warehouseId) {
+        List<Long> ids = new ArrayList<>();
+        ids.add(warehouseId);
+        collectChildIds(warehouseId, ids);
+        return ids;
+    }
+
+    private void collectChildIds(Long parentId, List<Long> ids) {
+        List<Warehouse> children = this.list(new LambdaQueryWrapper<Warehouse>()
+                .eq(Warehouse::getParentId, parentId));
+        for (Warehouse child : children) {
+            ids.add(child.getId());
+            collectChildIds(child.getId(), ids);
+        }
+    }
 }

@@ -15,6 +15,7 @@ import com.gangetong.mapper.StockMapper;
 import com.gangetong.mapper.WarehouseMapper;
 import com.gangetong.service.InventoryLockService;
 import com.gangetong.service.StockService;
+import com.gangetong.service.WarehouseService;
 import com.gangetong.vo.StockBatchVO;
 import com.gangetong.vo.StockSummaryVO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,6 +53,9 @@ public class StockServiceImpl extends ServiceImpl<StockMapper, Stock> implements
 
     @Autowired
     private InventoryLockService inventoryLockService;
+
+    @Autowired
+    private WarehouseService warehouseService;
 
     private String now() {
         return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
@@ -118,6 +122,20 @@ public class StockServiceImpl extends ServiceImpl<StockMapper, Stock> implements
         if (warehouseId != null) {
             wrapper.eq(Stock::getWarehouseId, warehouseId);
         }
+        wrapper.orderByDesc(Stock::getUpdateTime);
+        List<Stock> list = this.list(wrapper);
+        fillRelatedData(list);
+        return list;
+    }
+
+    @Override
+    public List<Stock> listByWarehouseIdWithChildren(Long warehouseId) {
+        LambdaQueryWrapper<Stock> wrapper = new LambdaQueryWrapper<>();
+        if (warehouseId != null) {
+            List<Long> allWarehouseIds = warehouseService.listAllChildIds(warehouseId);
+            wrapper.in(Stock::getWarehouseId, allWarehouseIds);
+        }
+        wrapper.gt(Stock::getQuantity, 0);
         wrapper.orderByDesc(Stock::getUpdateTime);
         List<Stock> list = this.list(wrapper);
         fillRelatedData(list);

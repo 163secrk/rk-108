@@ -5,6 +5,7 @@ import com.gangetong.dto.InventoryTransferDTO;
 import com.gangetong.entity.InTransitStock;
 import com.gangetong.entity.InventoryTransfer;
 import com.gangetong.entity.InventoryTransferItem;
+import com.gangetong.entity.Stock;
 import com.gangetong.service.InTransitStockService;
 import com.gangetong.service.InventoryTransferService;
 import com.gangetong.service.StockService;
@@ -56,6 +57,22 @@ public class InventoryTransferController {
     @GetMapping("/generate-no")
     public Result<String> generateTransferNo() {
         return Result.success(transferService.generateTransferNo());
+    }
+
+    @GetMapping("/available-stock")
+    public Result<List<Stock>> listAvailableStock(@RequestParam Long warehouseId,
+                                                   @RequestParam(required = false) String keyword) {
+        List<Stock> list = stockService.listByWarehouseIdWithChildren(warehouseId);
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            String kw = keyword.trim().toLowerCase();
+            list = list.stream().filter(s ->
+                    (s.getFurnaceNo() != null && s.getFurnaceNo().toLowerCase().contains(kw)) ||
+                    (s.getProductName() != null && s.getProductName().toLowerCase().contains(kw)) ||
+                    (s.getMaterialName() != null && s.getMaterialName().toLowerCase().contains(kw)) ||
+                    (s.getSpecName() != null && s.getSpecName().toLowerCase().contains(kw))
+            ).collect(java.util.stream.Collectors.toList());
+        }
+        return Result.success(list);
     }
 
     @PostMapping

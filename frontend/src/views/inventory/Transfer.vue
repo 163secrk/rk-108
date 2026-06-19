@@ -19,9 +19,9 @@ import {
   updateTransfer,
   deleteTransfer,
   auditTransfer,
-  receiveTransfer
+  receiveTransfer,
+  getAvailableStock
 } from '@/api/transfer'
-import { queryStockDetail } from '@/api/inventory'
 import { getWarehouseList } from '@/api/basicData'
 import { useUserStore } from '@/stores/user'
 
@@ -35,10 +35,12 @@ const searchForm = reactive({
 })
 
 const tableData = ref([])
+const allWarehouses = ref([])
 const warehouseOptions = ref([])
 const fromWarehouseOptions = ref([])
 const toWarehouseOptions = ref([])
 const stockOptions = ref([])
+const stockKeyword = ref('')
 
 const statusOptions = [
   { label: '全部', value: '' },
@@ -110,6 +112,7 @@ async function loadWarehouses() {
   try {
     const res = await getWarehouseList()
     if (res.code === 200) {
+      allWarehouses.value = res.data || []
       const level1List = res.data.filter(item => item.level === 1)
       warehouseOptions.value = level1List.map(item => ({
         label: `${item.name}${item.code ? ' (' + item.code + ')' : ''}`,
@@ -121,6 +124,20 @@ async function loadWarehouses() {
     console.error('加载仓库失败', e)
     Message.error('加载仓库数据失败')
   }
+}
+
+function getWarehouseFullName(warehouseId) {
+  if (!warehouseId) return ''
+  const wh = allWarehouses.value.find(w => w.id === warehouseId)
+  if (!wh) return ''
+  const parts = []
+  let current = wh
+  while (current) {
+    parts.unshift(current.name)
+    if (!current.parentId || current.parentId === 0) break
+    current = allWarehouses.value.find(w => w.id === current.parentId)
+  }
+  return parts.join(' / ')
 }
 
 async function handleSearch() {
@@ -276,10 +293,14 @@ async function loadStockList() {
   if (!transferForm.fromWarehouseId) return
   stockSelectLoading.value = true
   try {
-    const res = await queryStockDetail({ warehouseId: transferForm.fromWarehouseId })
+    const res = await getAvailableStock({
+      warehouseId: transferForm.fromWarehouseId,
+      keyword: stockKeyword.value
+    })
     if (res.code === 200) {
-      stockOptions.value = res.data.filter(item => Number(item.quantity) > 0).map(item => ({
+      stockOptions.value = (res.data || []).map(item => ({
         ...item,
+        warehouseFullName: getWarehouseFullName(item.warehouseId),
         label: `${item.productName || ''} - ${item.furnaceNo || ''} - ${item.quantity}支`,
         value: item.id
       }))
@@ -298,6 +319,8 @@ function handleStockSelect(stockId) {
   if (stock && index !== null) {
     if (transferForm.items[index]) {
       transferForm.items[index].stockId = stock.id
+      transferForm.items[index].warehouseId = stock.warehouseId
+      transferForm.items[index].warehouseFullName = stock.warehouseFullName
       transferForm.items[index].productId = stock.productId
       transferForm.items[index].productName = stock.productName
       transferForm.items[index].materialId = stock.materialId
@@ -312,6 +335,7 @@ function handleStockSelect(stockId) {
     }
   }
   stockSelectVisible.value = false
+  stockKeyword.value = ''
 }
 
 function handleAddItem() {
@@ -845,17 +869,18 @@ onMounted(() => {
                 <thead>
                   <tr>
                     <th style="width: 50px">序号</th>
-                    <th style="width: 200px">商品</th>
-                    <th style="width: 100px">材质</th>
-                    <th style="width: 100px">规格</th>
+                    <th style="width: 180px">商品</th>
+                    <th style="width: 90px">材质</th>
+                    <th style="width: 90px">规格</th>
                     <th style="width: 120px">炉批号</th>
-                    <th style="width: 100px">计划数量</th>
-                    <th style="width: 120px">计划重量(吨)</th>
-                    <th v-if="receiveMode || transferForm.status === 'RECEIVED'" style="width: 100px">实收数量</th>
-                    <th v-if="receiveMode || transferForm.status === 'RECEIVED'" style="width: 120px">实收重量(吨)</th>
-                    <th v-if="receiveMode || transferForm.status === 'RECEIVED'" style="width: 100px">数量差异</th>
-                    <th style="width: 120px">成本单价(元)</th>
-                    <th v-if="!viewMode && !receiveMode && transferForm.status === 'DRAFT'" style="width: 80px">操作</th>
+                    <th style="width: 160px">存放位置</th>
+                    <th style="width: 90px">计划数量</th>
+                    <th style="width: 110px">计划重量(吨)</th>
+                    <th v-if="receiveMode || transferForm.status === 'RECEIVED'" style="width: 90px">实收数量</th>
+                    <th v-if="receiveMode || transferForm.status === 'RECEIVED'" style="width: 110px">实收重量(吨)</th>
+                    <th v-if="receiveMode || transferForm.status === 'RECEIVED'" style="width: 90px">数量差异</th>
+                    <th style="width: 110px">成本单价(元)</th>
+                    <th v-if="!viewMode && !receiveMode && transferForm.status === 'DRAFT'" style="width: 70px">操作</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -875,6 +900,9 @@ onMounted(() => {
                     <td>{{ item.materialName || '-' }}</td>
                     <td>{{ item.specText || '-' }}</td>
                     <td>{{ item.furnaceNo || '-' }}</td>
+                    <td>
+                      <span :title="item.warehouseFullName || ''">{{ item.warehouseFullName || '-' }}</span>
+                    </td>
                     <td>
                       <a-input-number
                         v-if="!viewMode && !receiveMode && transferForm.status === 'DRAFT'"
@@ -929,14 +957,14 @@ onMounted(() => {
                     </td>
                   </tr>
                   <tr v-if="transferForm.items.length === 0">
-                    <td :colspan="viewMode || transferForm.status !== 'DRAFT' ? 11 : 12" class="text-center empty-tip">
+                    <td :colspan="viewMode || transferForm.status !== 'DRAFT' ? 12 : 13" class="text-center empty-tip">
                       {{ viewMode ? '暂无明细' : '请先选择调出仓库，然后点击"添加明细"选择要调拨的库存' }}
                     </td>
                   </tr>
                 </tbody>
                 <tfoot v-if="transferForm.items.length > 0">
                   <tr class="total-row">
-                    <td colspan="5" class="text-right"><strong>合计：</strong></td>
+                    <td colspan="6" class="text-right"><strong>合计：</strong></td>
                     <td class="text-right"><strong>{{ transferForm.totalQuantity }}</strong></td>
                     <td class="text-right weight-cell">
                       <strong>{{ Number(transferForm.totalWeight).toFixed(3) }}</strong>
@@ -963,12 +991,22 @@ onMounted(() => {
       v-model:visible="stockSelectVisible"
       title="选择库存批次"
       :mask-closable="false"
-      width="1000px"
+      width="1100px"
       :footer="false"
     >
       <div class="stock-select-modal">
         <div class="stock-select-header">
           <span class="stock-select-tip">请选择要调拨的库存批次（按炉批号）</span>
+          <div class="stock-search-wrapper">
+            <a-input-search
+              v-model="stockKeyword"
+              placeholder="搜索炉批号/商品/材质/规格"
+              style="width: 320px"
+              @search="loadStockList"
+              @clear="loadStockList"
+              allow-clear
+            />
+          </div>
         </div>
         <a-table
           :loading="stockSelectLoading"
@@ -981,17 +1019,22 @@ onMounted(() => {
           :row-style="{ cursor: 'pointer' }"
         >
           <template #columns>
-            <a-table-column title="商品名称" data-index="productName" :width="200" />
-            <a-table-column title="材质" data-index="materialName" :width="100" />
-            <a-table-column title="规格" data-index="specText" :width="120" />
-            <a-table-column title="炉批号" data-index="furnaceNo" :width="140" />
-            <a-table-column title="库存数量" data-index="quantity" :width="100" align="right" />
-            <a-table-column title="库存重量(吨)" :width="120" align="right">
+            <a-table-column title="商品名称" data-index="productName" :width="180" />
+            <a-table-column title="材质" data-index="materialName" :width="90" />
+            <a-table-column title="规格" data-index="specText" :width="110" />
+            <a-table-column title="炉批号" data-index="furnaceNo" :width="130" />
+            <a-table-column title="存放位置" :width="180">
+              <template #cell="{ record }">
+                {{ record.warehouseFullName || '-' }}
+              </template>
+            </a-table-column>
+            <a-table-column title="库存数量" data-index="quantity" :width="90" align="right" />
+            <a-table-column title="库存重量(吨)" :width="110" align="right">
               <template #cell="{ record }">
                 {{ Number(record.weight).toFixed(3) }}
               </template>
             </a-table-column>
-            <a-table-column title="成本单价(元)" :width="120" align="right">
+            <a-table-column title="成本单价(元)" :width="110" align="right">
               <template #cell="{ record }">
                 {{ Number(record.costUnitPrice).toFixed(2) }}
               </template>
@@ -1181,11 +1224,19 @@ onMounted(() => {
 .stock-select-header {
   margin-bottom: 12px;
   padding: 8px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .stock-select-tip {
   font-size: 13px;
   color: #718096;
+}
+
+.stock-search-wrapper {
+  display: flex;
+  align-items: center;
 }
 
 :deep(.arco-modal-body) {

@@ -67,3 +67,11 @@ export function getInTransitStockList(params) {
     params
   })
 }
+
+export function getAvailableStock(params) {
+  return request({
+    url: '/transfer/available-stock',
+    method: 'get',
+    params
+  })
+}

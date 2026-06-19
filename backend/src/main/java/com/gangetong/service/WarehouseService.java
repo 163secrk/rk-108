@@ -20,4 +20,6 @@ public interface WarehouseService extends IService<Warehouse> {
     boolean update(Warehouse warehouse);
 
     boolean delete(Long id);
+
+    List<Long> listAllChildIds(Long warehouseId);
 }

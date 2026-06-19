@@ -16,6 +16,7 @@ import com.gangetong.service.InTransitStockService;
 import com.gangetong.service.InventoryTransferItemService;
 import com.gangetong.service.InventoryTransferService;
 import com.gangetong.service.StockService;
+import com.gangetong.service.WarehouseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,6 +46,9 @@ public class InventoryTransferServiceImpl extends ServiceImpl<InventoryTransferM
 
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private WarehouseService warehouseService;
 
     private String now() {
         return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
@@ -215,6 +219,8 @@ public class InventoryTransferServiceImpl extends ServiceImpl<InventoryTransferM
         transfer.setCreateTime(now());
         transfer.setUpdateTime(now());
 
+        List<Long> fromWarehouseIds = warehouseService.listAllChildIds(dto.getFromWarehouseId());
+
         int totalQty = 0;
         BigDecimal totalWeight = BigDecimal.ZERO;
         List<InventoryTransferItem> items = dto.getItems();
@@ -227,7 +233,7 @@ public class InventoryTransferServiceImpl extends ServiceImpl<InventoryTransferM
             if (stock == null) {
                 throw new RuntimeException("库存记录不存在");
             }
-            if (!dto.getFromWarehouseId().equals(stock.getWarehouseId())) {
+            if (!fromWarehouseIds.contains(stock.getWarehouseId())) {
                 throw new RuntimeException("库存不在调出仓库中不存在该库存");
             }
             int planQty = item.getPlanQuantity() != null ? item.getPlanQuantity() : 0;
@@ -303,6 +309,8 @@ public class InventoryTransferServiceImpl extends ServiceImpl<InventoryTransferM
         transfer.setRemark(dto.getRemark());
         transfer.setUpdateTime(now());
 
+        List<Long> fromWarehouseIds = warehouseService.listAllChildIds(dto.getFromWarehouseId());
+
         int totalQty = 0;
         BigDecimal totalWeight = BigDecimal.ZERO;
         List<InventoryTransferItem> items = dto.getItems();
@@ -315,7 +323,7 @@ public class InventoryTransferServiceImpl extends ServiceImpl<InventoryTransferM
             if (stock == null) {
                 throw new RuntimeException("库存记录不存在");
             }
-            if (!dto.getFromWarehouseId().equals(stock.getWarehouseId())) {
+            if (!fromWarehouseIds.contains(stock.getWarehouseId())) {
                 throw new RuntimeException("调出仓库中不存在该库存");
             }
             int planQty = item.getPlanQuantity() != null ? item.getPlanQuantity() : 0;
