@@ -303,3 +303,109 @@ CREATE TABLE IF NOT EXISTS "inventory_lock" (
 CREATE INDEX IF NOT EXISTS idx_inventory_lock_order ON "inventory_lock" (order_id);
 CREATE INDEX IF NOT EXISTS idx_inventory_lock_stock ON "inventory_lock" (stock_id, status);
 CREATE INDEX IF NOT EXISTS idx_inventory_lock_product ON "inventory_lock" (product_id, warehouse_id, furnace_no, status);
+
+-- 销售出库单
+CREATE TABLE IF NOT EXISTS sales_outbound (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    outbound_no VARCHAR(50) NOT NULL,
+    order_id INTEGER NOT NULL,
+    customer_id INTEGER,
+    status VARCHAR(20) NOT NULL DEFAULT 'DRAFT',
+    total_quantity INTEGER,
+    total_weight DECIMAL(12,3),
+    plate_no VARCHAR(50),
+    driver_name VARCHAR(100),
+    driver_phone VARCHAR(20),
+    remark VARCHAR(500),
+    create_by INTEGER,
+    create_time VARCHAR(20) DEFAULT (datetime('now', 'localtime')),
+    update_time VARCHAR(20),
+    audit_by INTEGER,
+    audit_time VARCHAR(20)
+);
+
+CREATE INDEX IF NOT EXISTS idx_outbound_order ON sales_outbound (order_id);
+CREATE INDEX IF NOT EXISTS idx_outbound_status ON sales_outbound (status);
+
+-- 销售出库明细
+CREATE TABLE IF NOT EXISTS sales_outbound_item (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    outbound_id INTEGER NOT NULL,
+    order_item_id INTEGER,
+    lock_id INTEGER,
+    product_id INTEGER,
+    material_id INTEGER,
+    spec_id INTEGER,
+    stock_id INTEGER,
+    warehouse_id INTEGER,
+    furnace_no VARCHAR(100),
+    plan_quantity INTEGER,
+    actual_quantity INTEGER,
+    plan_weight DECIMAL(12,3),
+    actual_weight DECIMAL(12,3),
+    unit_price DECIMAL(12,3),
+    amount DECIMAL(12,3),
+    sort_no INTEGER,
+    create_time VARCHAR(20) DEFAULT (datetime('now', 'localtime'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_outbound_item ON sales_outbound_item (outbound_id);
+
+-- ============================================
+-- 库存管理：库存调拨单主表
+-- ============================================
+CREATE TABLE IF NOT EXISTS "inventory_transfer" (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    transfer_no VARCHAR(50) NOT NULL UNIQUE,
+    from_warehouse_id INTEGER NOT NULL,
+    to_warehouse_id INTEGER NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'DRAFT',
+    total_quantity INTEGER NOT NULL DEFAULT 0,
+    total_weight DECIMAL(12,3) NOT NULL DEFAULT 0,
+    received_quantity INTEGER NOT NULL DEFAULT 0,
+    received_weight DECIMAL(12,3) NOT NULL DEFAULT 0,
+    remark VARCHAR(500),
+    create_by INTEGER,
+    create_time VARCHAR(20) DEFAULT (datetime('now', 'localtime')),
+    update_time VARCHAR(20) DEFAULT (datetime('now', 'localtime')),
+    audit_by INTEGER,
+    audit_time VARCHAR(20),
+    receive_by INTEGER,
+    receive_time VARCHAR(20)
+);
+
+CREATE INDEX IF NOT EXISTS idx_transfer_from_warehouse ON "inventory_transfer" (from_warehouse_id);
+CREATE INDEX IF NOT EXISTS idx_transfer_to_warehouse ON "inventory_transfer" (to_warehouse_id);
+CREATE INDEX IF NOT EXISTS idx_transfer_status ON "inventory_transfer" (status);
+
+-- ============================================
+-- 库存管理：库存调拨单明细表
+-- ============================================
+CREATE TABLE IF NOT EXISTS "inventory_transfer_item" (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    transfer_id INTEGER NOT NULL,
+    stock_id INTEGER NOT NULL,
+    product_id INTEGER NOT NULL,
+    material_id INTEGER,
+    spec_id INTEGER,
+    furnace_no VARCHAR(50) NOT NULL,
+    plan_quantity INTEGER NOT NULL DEFAULT 0,
+    plan_weight DECIMAL(12,3) NOT NULL DEFAULT 0,
+    actual_quantity INTEGER DEFAULT 0,
+    actual_weight DECIMAL(12,3) DEFAULT 0,
+    diff_quantity INTEGER DEFAULT 0,
+    diff_weight DECIMAL(12,3) DEFAULT 0,
+    cost_unit_price DECIMAL(12,2) NOT NULL DEFAULT 0,
+    cost_amount DECIMAL(14,2) NOT NULL DEFAULT 0,
+    sort_no INTEGER DEFAULT 0,
+    create_time VARCHAR(20) DEFAULT (datetime('now', 'localtime'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_transfer_item_transfer ON "inventory_transfer_item" (transfer_id);
+
+-- ============================================
+-- 在途库存表升级说明
+-- ============================================
+-- 注意：在途库存表的新增字段由 DatabaseMigrationConfig 在应用启动时自动添加
+-- 包括：type, from_warehouse_id, to_warehouse_id, transfer_id, transfer_item_id,
+--       furnace_no, cost_unit_price, cost_amount

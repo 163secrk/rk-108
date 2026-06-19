@@ -10,16 +10,19 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 
 @Data
-@TableName("in_transit_stock")
-public class InTransitStock implements Serializable {
+@TableName("inventory_transfer_item")
+public class InventoryTransferItem implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
-    @TableField("type")
-    private String type;
+    @TableField("transfer_id")
+    private Long transferId;
+
+    @TableField("stock_id")
+    private Long stockId;
 
     @TableField("product_id")
     private Long productId;
@@ -39,47 +42,35 @@ public class InTransitStock implements Serializable {
     @TableField(exist = false)
     private String specText;
 
-    @TableField("from_warehouse_id")
-    private Long fromWarehouseId;
-
-    @TableField(exist = false)
-    private String fromWarehouseName;
-
-    @TableField("to_warehouse_id")
-    private Long toWarehouseId;
-
-    @TableField(exist = false)
-    private String toWarehouseName;
-
-    @TableField("contract_id")
-    private Long contractId;
-
-    @TableField(exist = false)
-    private String contractNo;
-
-    @TableField("contract_item_id")
-    private Long contractItemId;
-
-    @TableField("transfer_id")
-    private Long transferId;
-
-    @TableField("transfer_item_id")
-    private Long transferItemId;
-
     @TableField("furnace_no")
     private String furnaceNo;
 
-    @TableField("quantity")
-    private Integer quantity;
+    @TableField("plan_quantity")
+    private Integer planQuantity;
 
-    @TableField("weight")
-    private BigDecimal weight;
+    @TableField("plan_weight")
+    private BigDecimal planWeight;
+
+    @TableField("actual_quantity")
+    private Integer actualQuantity;
+
+    @TableField("actual_weight")
+    private BigDecimal actualWeight;
+
+    @TableField("diff_quantity")
+    private Integer diffQuantity;
+
+    @TableField("diff_weight")
+    private BigDecimal diffWeight;
 
     @TableField("cost_unit_price")
     private BigDecimal costUnitPrice;
 
     @TableField("cost_amount")
     private BigDecimal costAmount;
+
+    @TableField("sort_no")
+    private Integer sortNo;
 
     @TableField("create_time")
     private String createTime;
