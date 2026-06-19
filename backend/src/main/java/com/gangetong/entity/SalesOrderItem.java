@@ -10,16 +10,22 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 
 @Data
-@TableName("stock")
-public class Stock implements Serializable {
+@TableName("sales_order_item")
+public class SalesOrderItem implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
+    @TableField("order_id")
+    private Long orderId;
+
     @TableField("product_id")
     private Long productId;
+
+    @TableField(exist = false)
+    private String productCode;
 
     @TableField(exist = false)
     private String productName;
@@ -34,35 +40,41 @@ public class Stock implements Serializable {
     private Long specId;
 
     @TableField(exist = false)
-    private String specText;
-
-    @TableField("warehouse_id")
-    private Long warehouseId;
+    private String diameter;
 
     @TableField(exist = false)
-    private String warehouseName;
+    private String wallThickness;
 
-    @TableField("furnace_no")
-    private String furnaceNo;
+    @TableField(exist = false)
+    private String length;
+
+    @TableField(exist = false)
+    private BigDecimal weightPerMeter;
 
     @TableField("quantity")
     private Integer quantity;
 
+    @TableField("unit_price")
+    private BigDecimal unitPrice;
+
+    @TableField("amount")
+    private BigDecimal amount;
+
     @TableField("weight")
     private BigDecimal weight;
 
-    @TableField("cost_unit_price")
-    private BigDecimal costUnitPrice;
+    @TableField("out_stock_quantity")
+    private Integer outStockQuantity;
 
-    @TableField("cost_amount")
-    private BigDecimal costAmount;
+    @TableField(exist = false)
+    private Integer remainingQuantity;
+
+    @TableField(exist = false)
+    private java.util.List<InventoryLock> stockLocks;
+
+    @TableField("sort_no")
+    private Integer sortNo;
 
     @TableField("create_time")
     private String createTime;
-
-    @TableField("update_time")
-    private String updateTime;
-
-    @TableField(exist = false)
-    private String stockInDate;
 }

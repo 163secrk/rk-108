@@ -13,6 +13,7 @@ import com.gangetong.mapper.ProductMapper;
 import com.gangetong.mapper.SteelSpecMapper;
 import com.gangetong.mapper.StockMapper;
 import com.gangetong.mapper.WarehouseMapper;
+import com.gangetong.service.InventoryLockService;
 import com.gangetong.service.StockService;
 import com.gangetong.vo.StockBatchVO;
 import com.gangetong.vo.StockSummaryVO;
@@ -48,6 +49,9 @@ public class StockServiceImpl extends ServiceImpl<StockMapper, Stock> implements
 
     @Autowired
     private StockMapper stockMapper;
+
+    @Autowired
+    private InventoryLockService inventoryLockService;
 
     private String now() {
         return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
@@ -256,5 +260,96 @@ public class StockServiceImpl extends ServiceImpl<StockMapper, Stock> implements
         }
 
         return new ArrayList<>(summaryMap.values());
+    }
+
+    @Override
+    public List<Stock> listAvailableForSale(Long productId, Long warehouseId, Long materialId, Long specId) {
+        LambdaQueryWrapper<Stock> wrapper = new LambdaQueryWrapper<>();
+        wrapper.gt(Stock::getQuantity, 0);
+        if (productId != null) {
+            wrapper.eq(Stock::getProductId, productId);
+        }
+        if (warehouseId != null) {
+            wrapper.eq(Stock::getWarehouseId, warehouseId);
+        }
+        if (materialId != null) {
+            wrapper.eq(Stock::getMaterialId, materialId);
+        }
+        if (specId != null) {
+            wrapper.eq(Stock::getSpecId, specId);
+        }
+        wrapper.orderByAsc(Stock::getCreateTime);
+        List<Stock> list = this.list(wrapper);
+        fillRelatedData(list);
+        return list;
+    }
+
+    @Override
+    public List<StockSummaryVO> queryStockTreeForSale(Long warehouseId, Long materialId, Long specId, Long productId) {
+        StockQueryDTO dto = new StockQueryDTO();
+        dto.setWarehouseId(warehouseId);
+        dto.setMaterialId(materialId);
+        dto.setSpecId(specId);
+        // queryStockTree内部不支持productId过滤，需要手动处理
+        List<StockSummaryVO> tree = queryStockTree(dto);
+        if (productId != null && tree != null) {
+            tree = tree.stream()
+                    .filter(s -> productId.equals(s.getProductId()))
+                    .collect(Collectors.toList());
+        }
+        return tree != null ? tree : new ArrayList<>();
+    }
+
+    @Override
+    public List<StockSummaryVO> queryStockTreeForSaleWithLock(Long warehouseId, Long materialId, Long specId, Long productId, Long excludeOrderId) {
+        List<StockSummaryVO> tree = queryStockTreeForSale(warehouseId, materialId, specId, productId);
+        if (tree == null || tree.isEmpty()) {
+            return new ArrayList<>();
+        }
+        Long orderId = excludeOrderId != null ? excludeOrderId : -1L;
+        for (StockSummaryVO summary : tree) {
+            if (summary.getChildren() == null) continue;
+            int totalAvailableQty = 0;
+            BigDecimal totalAvailableWeight = BigDecimal.ZERO;
+
+            for (StockBatchVO batch : summary.getChildren()) {
+                int rawQty = batch.getRemainingQuantity() != null ? batch.getRemainingQuantity() : 0;
+                if (rawQty <= 0) {
+                    batch.setRemainingQuantity(0);
+                    batch.setRemainingWeight(BigDecimal.ZERO);
+                    continue;
+                }
+                // 通过stockId反查stock对象获取批次标识信息
+                Stock stock = stockMapper.selectById(batch.getId());
+                int available = rawQty;
+                if (stock != null) {
+                    available = inventoryLockService.getAvailableQuantityByBatch(
+                            stock.getProductId(), stock.getWarehouseId(), stock.getFurnaceNo(), orderId);
+                }
+                available = Math.max(0, Math.min(available, rawQty));
+                batch.setRemainingQuantity(available);
+
+                BigDecimal rawWeight = batch.getRemainingWeight() != null ? batch.getRemainingWeight() : BigDecimal.ZERO;
+                if (rawQty > 0 && available > 0) {
+                    BigDecimal perQtyWeight = rawWeight.divide(BigDecimal.valueOf(rawQty), 6, BigDecimal.ROUND_HALF_UP);
+                    BigDecimal availableWeight = perQtyWeight.multiply(BigDecimal.valueOf(available));
+                    batch.setRemainingWeight(availableWeight);
+                    totalAvailableWeight = totalAvailableWeight.add(availableWeight);
+                } else {
+                    batch.setRemainingWeight(BigDecimal.ZERO);
+                }
+
+                totalAvailableQty += available;
+            }
+            summary.setTotalQuantity(totalAvailableQty);
+            summary.setTotalWeight(totalAvailableWeight);
+
+            summary.setChildren(summary.getChildren().stream()
+                    .filter(b -> b.getRemainingQuantity() != null && b.getRemainingQuantity() > 0)
+                    .collect(Collectors.toList()));
+        }
+        return tree.stream()
+                .filter(s -> s.getChildren() != null && !s.getChildren().isEmpty())
+                .collect(Collectors.toList());
     }
 }

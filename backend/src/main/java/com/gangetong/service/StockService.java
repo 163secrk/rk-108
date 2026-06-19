@@ -20,4 +20,10 @@ public interface StockService extends IService<Stock> {
                           String furnaceNo, Integer quantity, BigDecimal weight, BigDecimal costUnitPrice);
 
     List<StockSummaryVO> queryStockTree(StockQueryDTO dto);
+
+    List<Stock> listAvailableForSale(Long productId, Long warehouseId, Long materialId, Long specId);
+
+    List<StockSummaryVO> queryStockTreeForSale(Long warehouseId, Long materialId, Long specId, Long productId);
+
+    List<StockSummaryVO> queryStockTreeForSaleWithLock(Long warehouseId, Long materialId, Long specId, Long productId, Long excludeOrderId);
 }

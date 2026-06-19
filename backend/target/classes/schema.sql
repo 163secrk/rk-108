@@ -245,3 +245,61 @@ CREATE TABLE IF NOT EXISTS "stock" (
 );
 
 CREATE INDEX IF NOT EXISTS idx_stock_product_warehouse_furnace ON "stock" (product_id, warehouse_id, furnace_no);
+
+-- ============================================
+-- 销售管理：销售订单主表
+-- ============================================
+CREATE TABLE IF NOT EXISTS "sales_order" (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_no VARCHAR(50) NOT NULL UNIQUE,
+    customer_id INTEGER NOT NULL,
+    order_date VARCHAR(20) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'DRAFT',
+    total_amount DECIMAL(14,2) NOT NULL DEFAULT 0,
+    total_weight DECIMAL(12,3) NOT NULL DEFAULT 0,
+    is_over_credit INTEGER NOT NULL DEFAULT 0,
+    remark VARCHAR(500),
+    create_by INTEGER,
+    create_time VARCHAR(20) DEFAULT (datetime('now', 'localtime')),
+    update_time VARCHAR(20) DEFAULT (datetime('now', 'localtime'))
+);
+
+-- ============================================
+-- 销售管理：销售订单明细表（每个明细可关联多个库存批次）
+-- ============================================
+CREATE TABLE IF NOT EXISTS "sales_order_item" (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_id INTEGER NOT NULL,
+    product_id INTEGER NOT NULL,
+    material_id INTEGER NOT NULL,
+    spec_id INTEGER NOT NULL,
+    quantity INTEGER NOT NULL DEFAULT 0,
+    unit_price DECIMAL(12,2) NOT NULL DEFAULT 0,
+    amount DECIMAL(14,2) NOT NULL DEFAULT 0,
+    weight DECIMAL(12,3) NOT NULL DEFAULT 0,
+    out_stock_quantity INTEGER NOT NULL DEFAULT 0,
+    sort_no INTEGER DEFAULT 0,
+    create_time VARCHAR(20) DEFAULT (datetime('now', 'localtime'))
+);
+
+-- ============================================
+-- 销售管理：库存锁定表（销售订单确认后锁定库存，不扣实际库存）
+-- ============================================
+CREATE TABLE IF NOT EXISTS "inventory_lock" (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_id INTEGER NOT NULL,
+    order_item_id INTEGER NOT NULL,
+    stock_id INTEGER NOT NULL,
+    product_id INTEGER NOT NULL,
+    warehouse_id INTEGER NOT NULL,
+    furnace_no VARCHAR(50) NOT NULL,
+    lock_quantity INTEGER NOT NULL DEFAULT 0,
+    lock_weight DECIMAL(12,3) NOT NULL DEFAULT 0,
+    status VARCHAR(20) NOT NULL DEFAULT 'LOCKED',
+    create_time VARCHAR(20) DEFAULT (datetime('now', 'localtime')),
+    release_time VARCHAR(20)
+);
+
+CREATE INDEX IF NOT EXISTS idx_inventory_lock_order ON "inventory_lock" (order_id);
+CREATE INDEX IF NOT EXISTS idx_inventory_lock_stock ON "inventory_lock" (stock_id, status);
+CREATE INDEX IF NOT EXISTS idx_inventory_lock_product ON "inventory_lock" (product_id, warehouse_id, furnace_no, status);
