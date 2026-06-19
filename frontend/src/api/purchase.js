@@ -66,3 +66,55 @@ export function getInTransitStockList(params) {
     params
   })
 }
+
+export function getStockInOrderList(params) {
+  return request({
+    url: '/stock-in/order/list',
+    method: 'get',
+    params
+  })
+}
+
+export function getStockInOrderDetail(id) {
+  return request({
+    url: `/stock-in/order/${id}`,
+    method: 'get'
+  })
+}
+
+export function generateStockInOrderNo() {
+  return request({
+    url: '/stock-in/order/generate-no',
+    method: 'get'
+  })
+}
+
+export function addStockInOrder(data) {
+  return request({
+    url: '/stock-in/order',
+    method: 'post',
+    data
+  })
+}
+
+export function deleteStockInOrder(id) {
+  return request({
+    url: `/stock-in/order/${id}`,
+    method: 'delete'
+  })
+}
+
+export function auditStockInOrder(id) {
+  return request({
+    url: `/stock-in/order/audit/${id}`,
+    method: 'post'
+  })
+}
+
+export function getStockList(params) {
+  return request({
+    url: '/stock-in/stock/list',
+    method: 'get',
+    params
+  })
+}

@@ -183,3 +183,65 @@ CREATE TABLE IF NOT EXISTS "in_transit_stock" (
     weight DECIMAL(12,3) NOT NULL DEFAULT 0,
     create_time VARCHAR(20) DEFAULT (datetime('now', 'localtime'))
 );
+
+-- ============================================
+-- 采购管理：入库单主表
+-- ============================================
+CREATE TABLE IF NOT EXISTS "stock_in_order" (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_no VARCHAR(50) NOT NULL UNIQUE,
+    contract_id INTEGER NOT NULL,
+    supplier_id INTEGER,
+    warehouse_id INTEGER,
+    status VARCHAR(20) NOT NULL DEFAULT 'DRAFT',
+    total_quantity INTEGER NOT NULL DEFAULT 0,
+    total_theoretical_weight DECIMAL(12,3) NOT NULL DEFAULT 0,
+    total_actual_weight DECIMAL(12,3) NOT NULL DEFAULT 0,
+    total_amount DECIMAL(14,2) NOT NULL DEFAULT 0,
+    remark VARCHAR(500),
+    create_by INTEGER,
+    create_time VARCHAR(20) DEFAULT (datetime('now', 'localtime')),
+    update_time VARCHAR(20) DEFAULT (datetime('now', 'localtime')),
+    audit_by INTEGER,
+    audit_time VARCHAR(20)
+);
+
+-- ============================================
+-- 采购管理：入库单明细表（强制录入炉批号用于质量追溯）
+-- ============================================
+CREATE TABLE IF NOT EXISTS "stock_in_item" (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_id INTEGER NOT NULL,
+    contract_item_id INTEGER,
+    product_id INTEGER NOT NULL,
+    material_id INTEGER,
+    spec_id INTEGER,
+    furnace_no VARCHAR(50) NOT NULL,
+    quantity INTEGER NOT NULL DEFAULT 0,
+    unit_price DECIMAL(12,2) NOT NULL DEFAULT 0,
+    theoretical_weight DECIMAL(12,3) NOT NULL DEFAULT 0,
+    actual_weight DECIMAL(12,3) NOT NULL DEFAULT 0,
+    deviation_rate DECIMAL(8,4) NOT NULL DEFAULT 0,
+    amount DECIMAL(14,2) NOT NULL DEFAULT 0,
+    create_time VARCHAR(20) DEFAULT (datetime('now', 'localtime'))
+);
+
+-- ============================================
+-- 库存管理：库存表（按炉批号分批次记录，记录入库成本单价）
+-- ============================================
+CREATE TABLE IF NOT EXISTS "stock" (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    product_id INTEGER NOT NULL,
+    material_id INTEGER,
+    spec_id INTEGER,
+    warehouse_id INTEGER NOT NULL,
+    furnace_no VARCHAR(50) NOT NULL,
+    quantity INTEGER NOT NULL DEFAULT 0,
+    weight DECIMAL(12,3) NOT NULL DEFAULT 0,
+    cost_unit_price DECIMAL(12,2) NOT NULL DEFAULT 0,
+    cost_amount DECIMAL(14,2) NOT NULL DEFAULT 0,
+    create_time VARCHAR(20) DEFAULT (datetime('now', 'localtime')),
+    update_time VARCHAR(20) DEFAULT (datetime('now', 'localtime'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_stock_product_warehouse_furnace ON "stock" (product_id, warehouse_id, furnace_no);
