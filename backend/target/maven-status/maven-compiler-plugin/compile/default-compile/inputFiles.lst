@@ -20,12 +20,15 @@ D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\Gangetong
 D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\service\StockService.java
 D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\controller\StockInController.java
 D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\controller\AuthController.java
+D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\controller\InventoryController.java
 D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\mapper\MaterialMapper.java
 D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\entity\Warehouse.java
 D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\mapper\StockInItemMapper.java
 D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\service\StockInOrderService.java
 D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\common\Result.java
+D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\dto\StockQueryDTO.java
 D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\service\StockInItemService.java
+D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\vo\StockSummaryVO.java
 D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\entity\Stock.java
 D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\entity\PurchaseContract.java
 D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\mapper\StockMapper.java
@@ -57,6 +60,7 @@ D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\service\i
 D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\mapper\ProductMapper.java
 D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\mapper\StockInOrderMapper.java
 D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\dto\LoginVO.java
+D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\vo\StockBatchVO.java
 D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\service\ProductService.java
 D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\service\PurchaseContractService.java
 D:\data\projects\bz-6\repos\rk-108\backend\src\main\java\com\gangetong\service\UserService.java

@@ -1,7 +1,9 @@
 package com.gangetong.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.gangetong.dto.StockQueryDTO;
 import com.gangetong.entity.Stock;
+import com.gangetong.vo.StockSummaryVO;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -16,4 +18,6 @@ public interface StockService extends IService<Stock> {
 
     boolean increaseStock(Long productId, Long materialId, Long specId, Long warehouseId,
                           String furnaceNo, Integer quantity, BigDecimal weight, BigDecimal costUnitPrice);
+
+    List<StockSummaryVO> queryStockTree(StockQueryDTO dto);
 }

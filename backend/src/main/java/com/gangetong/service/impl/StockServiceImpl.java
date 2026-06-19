@@ -2,6 +2,7 @@ package com.gangetong.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.gangetong.dto.StockQueryDTO;
 import com.gangetong.entity.Material;
 import com.gangetong.entity.Product;
 import com.gangetong.entity.SteelSpec;
@@ -13,6 +14,8 @@ import com.gangetong.mapper.SteelSpecMapper;
 import com.gangetong.mapper.StockMapper;
 import com.gangetong.mapper.WarehouseMapper;
 import com.gangetong.service.StockService;
+import com.gangetong.vo.StockBatchVO;
+import com.gangetong.vo.StockSummaryVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,7 +24,9 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -40,6 +45,9 @@ public class StockServiceImpl extends ServiceImpl<StockMapper, Stock> implements
 
     @Autowired
     private WarehouseMapper warehouseMapper;
+
+    @Autowired
+    private StockMapper stockMapper;
 
     private String now() {
         return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
@@ -176,5 +184,77 @@ public class StockServiceImpl extends ServiceImpl<StockMapper, Stock> implements
         stock.setCostAmount(totalAmount);
         stock.setUpdateTime(now());
         return this.updateById(stock);
+    }
+
+    @Override
+    public List<StockSummaryVO> queryStockTree(StockQueryDTO dto) {
+        LambdaQueryWrapper<Stock> wrapper = new LambdaQueryWrapper<>();
+        wrapper.gt(Stock::getQuantity, 0);
+        if (dto != null) {
+            if (dto.getWarehouseId() != null) {
+                wrapper.eq(Stock::getWarehouseId, dto.getWarehouseId());
+            }
+            if (dto.getMaterialId() != null) {
+                wrapper.eq(Stock::getMaterialId, dto.getMaterialId());
+            }
+            if (dto.getSpecId() != null) {
+                wrapper.eq(Stock::getSpecId, dto.getSpecId());
+            }
+        }
+        wrapper.orderByDesc(Stock::getUpdateTime);
+        List<Stock> stocks = this.list(wrapper);
+        if (stocks == null || stocks.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        fillRelatedData(stocks);
+
+        Map<String, StockSummaryVO> summaryMap = new LinkedHashMap<>();
+        long summaryId = 1L;
+
+        for (Stock stock : stocks) {
+            String key = stock.getWarehouseId() + "_" + stock.getSpecId();
+            StockSummaryVO summary = summaryMap.get(key);
+            if (summary == null) {
+                summary = new StockSummaryVO();
+                summary.setId(summaryId++ * 100000);
+                summary.setWarehouseId(stock.getWarehouseId());
+                summary.setWarehouseName(stock.getWarehouseName());
+                summary.setMaterialId(stock.getMaterialId());
+                summary.setMaterialName(stock.getMaterialName());
+                summary.setSpecId(stock.getSpecId());
+                summary.setSpecText(stock.getSpecText());
+                summary.setProductId(stock.getProductId());
+                summary.setProductName(stock.getProductName());
+                summary.setTotalQuantity(0);
+                summary.setTotalWeight(BigDecimal.ZERO);
+                summary.setChildren(new ArrayList<>());
+                summaryMap.put(key, summary);
+            }
+
+            summary.setTotalQuantity(summary.getTotalQuantity() + (stock.getQuantity() != null ? stock.getQuantity() : 0));
+            summary.setTotalWeight(summary.getTotalWeight().add(stock.getWeight() != null ? stock.getWeight() : BigDecimal.ZERO));
+
+            StockBatchVO batch = new StockBatchVO();
+            batch.setId(stock.getId());
+            batch.setFurnaceNo(stock.getFurnaceNo());
+            batch.setRemainingQuantity(stock.getQuantity());
+            batch.setRemainingWeight(stock.getWeight());
+            batch.setUnitPrice(stock.getCostUnitPrice());
+
+            String stockInDate = stockMapper.getStockInDate(stock.getProductId(), stock.getFurnaceNo());
+            if (stockInDate != null && stockInDate.length() >= 10) {
+                batch.setStockInDate(stockInDate.substring(0, 10));
+            } else {
+                String ct = stock.getCreateTime();
+                if (ct != null && ct.length() >= 10) {
+                    batch.setStockInDate(ct.substring(0, 10));
+                }
+            }
+
+            summary.getChildren().add(batch);
+        }
+
+        return new ArrayList<>(summaryMap.values());
     }
 }
