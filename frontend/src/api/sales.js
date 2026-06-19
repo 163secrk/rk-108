@@ -75,3 +75,62 @@ export function getAvailableStockTree(params) {
     params
   })
 }
+
+export function getSalesOutboundList(params) {
+  return request({
+    url: '/sales-outbound/list',
+    method: 'get',
+    params
+  })
+}
+
+export function getSalesOutboundDetail(id) {
+  return request({
+    url: `/sales-outbound/${id}`,
+    method: 'get'
+  })
+}
+
+export function generateSalesOutboundNo() {
+  return request({
+    url: '/sales-outbound/generate-no',
+    method: 'get'
+  })
+}
+
+export function generateOutboundFromOrder(orderId) {
+  return request({
+    url: `/sales-outbound/generate-from-order/${orderId}`,
+    method: 'get'
+  })
+}
+
+export function addSalesOutbound(data) {
+  return request({
+    url: '/sales-outbound',
+    method: 'post',
+    data
+  })
+}
+
+export function updateSalesOutbound(data) {
+  return request({
+    url: '/sales-outbound',
+    method: 'put',
+    data
+  })
+}
+
+export function deleteSalesOutbound(id) {
+  return request({
+    url: `/sales-outbound/${id}`,
+    method: 'delete'
+  })
+}
+
+export function auditSalesOutbound(id) {
+  return request({
+    url: `/sales-outbound/audit/${id}`,
+    method: 'post'
+  })
+}
